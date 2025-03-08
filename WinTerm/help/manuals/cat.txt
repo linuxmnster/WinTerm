@@ -1,0 +1,6 @@
+cat - Display file contents  
+Usage: cat <file_name>  
+Description:  
+  Prints the content of a file to the terminal.  
+Example:  
+  cat myfile.txt  

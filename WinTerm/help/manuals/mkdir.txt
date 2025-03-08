@@ -1,0 +1,7 @@
+mkdir - Create a new directory  
+Usage: mkdir <directory_name>  
+Description:  
+  Creates a new directory with the specified name.
+  -m for multiple directories
+Example:  
+  mkdir myfolder

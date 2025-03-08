@@ -1,0 +1,8 @@
+rmdir - Remove an empty directory  
+Usage: rmdir <directory_name>  
+Description:  
+  Deletes an empty directory.  
+  -m to remove multiple direcotry.
+  -f to remove non empty directory.
+Example:  
+  rmdir myfolder 

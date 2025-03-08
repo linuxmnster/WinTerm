@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tools - WinTerm</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Cinzel|Fauna+One|Lobster|Merriweather|Montserrat|Nunito|Open+Sans|Oswald|Poppins|Roboto|Roboto+Condensed|Roboto+Slab|Source+Sans+Pro|Ubuntu&display=swap">
+    
+    <style>
+        .content h2 {
+            margin-top: 20px;
+            font-size: 1.8rem;
+            color: #90CAF9;
+            text-align: center;
+        }
+
+        .content h3 {
+            margin-top: 15px;
+            margin-bottom: 10px;
+            font-size: 1.5rem;
+            color: #f0f0f0;
+        }
+
+        .content p {
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+            line-height: 1.6;
+            color: #dcdcdc;
+        }
+
+        .tool {
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+            border-left: 5px solid #90CAF9;
+            transition: 0.3s ease-in-out;
+        }
+
+        .tool:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-3px);
+        }
+
+        .tool h2 {
+            color: #90CAF9;
+            font-size: 1.7rem;
+        }
+
+        .tool p {
+            color: #dcdcdc;
+        }
+
+        pre {
+            background-color: rgba(255, 255, 255, 0.15);
+            padding: 10px;
+            border-radius: 5px;
+            font-family: 'Source Code Pro', monospace;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            color: #fff;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="nav-bar">
+            <div class="heading"><a href="index.html">WinTerm</a></div>
+            <div class="nav-elements">
+                <p><a href="commands.html">Commands</a></p>
+                <p><a href="tools.html">Tools</a></p>
+                <p><a href="services.html">Services</a></p>
+            </div>
+        </div>
+
+        <div class="content">
+            <div class="headin">
+                <h1>🔍 Custom Tools</h1>
+            </div>
+
+            <div class="context">
+                <p>
+                    OSINT (Open-Source Intelligence) & Security Tools help investigators, cybersecurity professionals, and researchers **gather, analyze, and extract critical information from various sources. 
+                    These tools are essential for penetration testing, ethical hacking, forensic analysis, and cybersecurity audits.
+                </p>
+
+                <h2>🛠 Available Security Tools</h2>
+
+                <div class="tool">
+                    <h2>🔎 Binwalk - Firmware Analysis & Reverse Engineering</h2>
+                    <p><strong>Description:</strong>  
+                        Binwalk is a forensic analysis tool used for analyzing and extracting embedded files from firmware images, compressed archives, and hidden payloads. 
+                        It is commonly used in **reverse engineering, IoT security, and malware analysis.
+                    </p>
+                    <p><strong>Features:</strong></p>
+                    <ul>
+                        <li>Extracts hidden files within firmware and binary images.</li>
+                        <li>Identifies **compressed files, encryption, and executable code.**</li>
+                        <li>Used for malware analysis and **security research.</li>
+                    </ul>
+                    <p><strong>Usage:</strong></p>
+                    <pre>binwalk <file></pre>
+                </div>
+
+                <div class="tool">
+                    <h2>📷 ExifTool - Metadata Extraction</h2>
+                    <p><strong>Description:</strong>  
+                        ExifTool is a powerful metadata extraction tool that analyzes images, PDFs, videos, and other digital files to uncover hidden data such as timestamps, geolocation, and device details.
+                    </p>
+                    <p><strong>Features:</strong></p>
+                    <ul>
+                        <li>Extracts metadata like camera details, GPS location, timestamps.</li>
+                        <li>Analyzes forensic evidence in digital crime investigations.</li>
+                        <li>Removes metadata to enhance privacy and security.</li>
+                    </ul>
+                    <p><strong>Usage:</strong></p>
+                    <pre>exiftool <file></pre>
+                </div>
+
+                <div class="tool">
+                    <h2>🌍 Google Search (GSearch) - OSINT Query Automation</h2>
+                    <p><strong>Description:</strong>  
+                        GSearch automates Google searches to find hidden or indexed data, making it a powerful OSINT tool for penetration testing, research, and competitive intelligence.
+                    </p>
+                    <p><strong>Features:</strong></p>
+                    <ul>
+                        <li>Automates Google dorking for advanced searches.</li>
+                        <li>Extracts publicly available sensitive information.</li>
+                        <li>Useful for threat intelligence & reconnaissance.</li>
+                    </ul>
+                    <p><strong>Usage:</strong></p>
+                    <pre>google "site:example.com filetype:pdf" -number</pre>
+                </div>
+
+                <div class="tool">
+                    <h2>📞 Phone OSINT - Number Lookup</h2>
+                    <p><strong>Description:</strong>  
+                        Phone OSINT gathers intelligence about phone numbers, including country, carrier, and time zone, making it useful for fraud detection and identity verification.**
+                    </p>
+                    <p><strong>Features:</strong></p>
+                    <ul>
+                        <li>Retrieves network provider, region, and type (mobile/landline).</li>
+                        <li>Used for fraud detection and investigative research.</li>
+                    </ul>
+                    <p><strong>Usage:</strong></p>
+                    <pre>lookup <phone_number></pre>
+                </div>
+
+                <div class="tool">
+                    <h2>🔎 Sherlock - Social Media Username Search</h2>
+                    <p><strong>Description:</strong>  
+                        Sherlock scans hundreds of social media platforms to check for a specific username, making it useful for OSINT investigations, identity verification, and digital footprint analysis.
+                    </p>
+                    <p><strong>Features:</strong></p>
+                    <ul>
+                        <li>Finds usernames across social media, forums, and platforms.</li>
+                        <li>Used for law enforcement, cybersecurity, and investigations.</li>
+                    </ul>
+                    <p><strong>Usage:</strong></p>
+                    <pre>sherlock <username></pre>
+                </div>
+
+                <div class="tool">
+                    <h2>🖼️ StegHide - Steganography & Hidden Data Extraction</h2>
+                    <p><strong>Description:</strong>  
+                        StegHide is a steganography tool that allows users to hide and extract secret data within image and audio files**.  
+                        It is widely used in secure communication, digital forensics, and CTF (Capture The Flag) challenges**.
+                    </p>
+                    
+                    <p><strong>Features:</strong></p>
+                    <ul>
+                        <li>Hides secret messages or files inside images and audio.</li>
+                        <li>Encrypts hidden data using password protection for security.</li>
+                        <li>Extracts hidden data from suspicious or unknown images.</li>
+                        <li>Used in forensics, cybersecurity, and covert communication.</li>
+                    </ul>
+                
+                    <p><strong>Real-World Applications:</strong></p>
+                    <ul>
+                        <li>Used by journalists and activists to hide sensitive information from censorship.</li>
+                        <li>Cybersecurity professionals use it for forensic analysis and ethical hacking.</li>
+                        <li>Commonly seen in CTF competitions where hidden clues are embedded in images.</li>
+                    </ul>
+                
+                    <p><strong>Usage:</strong></p>
+                    <pre>
+                # To hide a secret file inside an image:
+                steghide embed -cf cover.jpg -ef secret.txt -sf output.jpg -p mypassword
+                
+                # To extract a hidden file from an image:
+                steghide extract -sf output.jpg -p mypassword
+                    </pre>
+                </div>
+                
+            </div>
+        </div>
+    </div>
+
+    <div class="blur-effect"></div>
+</body>
+
+</html>

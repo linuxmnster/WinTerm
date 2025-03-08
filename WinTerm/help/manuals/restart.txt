@@ -1,0 +1,6 @@
+restart - Restart the system  
+Usage: restart  [time_in_sec]
+Description:  
+  Reboots the system immediately.  
+Example:  
+  restart

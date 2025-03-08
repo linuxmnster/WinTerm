@@ -1,0 +1,169 @@
+* {
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+    text-decoration: none;
+    color: white;
+}
+
+body {
+    background-color: #000;
+    font-family: 'Poppins', sans-serif;
+}
+
+/* Centered container */
+.container {
+    position: relative;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 75%;
+    min-height: 100vh;
+}
+
+/* Navigation Bar */
+.nav-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 80%;
+    height: 10%;
+    background-color: rgba(61, 59, 59, 0.811);
+    border: 1px solid white;
+    border-radius: 30px;
+    padding: 10px 20px;
+    margin-top: 25px;
+}
+
+/* Add space below navbar */
+.nav-bar + .content {
+    margin-top: 30px;
+}
+
+.nav-bar .heading {
+    font-size: 1.5rem;
+    font-weight: 800;
+    font-family: 'Source Sans Pro', sans-serif;
+}
+
+.nav-bar .nav-elements {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 40%;
+    font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+}
+
+.nav-bar .nav-elements p {
+    cursor: pointer;
+}
+
+.nav-bar .nav-elements p a {
+    color: white;
+    text-decoration: none;
+}
+
+.nav-bar .nav-elements p::after {
+    content: " ";
+    display: block;
+    position: relative;
+    background-color: white;
+    height: 2px;
+    width: 0;
+    transform: translateX(-50%);
+    left: 50%;
+    transition: width 0.5s ease-out;
+}
+
+.nav-bar .nav-elements p:hover::after {
+    width: 100%;
+}
+
+/* Content Box - Fully Adapts to Content */
+.content {
+    overflow: visible; /* Ensures no hidden content */
+    height: auto; /* Adjusts height dynamically */
+    min-height: 300px; /* Ensures a minimum size */
+    width: 80%;
+    padding: 20px;
+    border: 1px solid white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: rgba(61, 59, 59, 0.811);
+    border-radius: 20px;
+    word-wrap: break-word; /* Prevents long text from overflowing */
+}
+
+/* Context - Holds text and keeps structure */
+.context {
+    width: 95%;
+    font-family: 'Fauna One', serif;
+    line-height: 25px;
+}
+
+/* Command List & Table */
+.commands-list {
+    width: 100%;
+    margin-top: 15px;
+    overflow: visible; /* Ensures full visibility */
+}
+
+.commands-list table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+/* Table Borders and Padding */
+.commands-list table th,
+.commands-list table td {
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    padding: 12px;
+    text-align: left;
+    vertical-align: top;
+}
+
+/* Add space between table rows */
+.commands-list table tr {
+    height: 50px;
+}
+
+/* Highlight rows on hover */
+.commands-list table tr:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Command Column Formatting */
+.commands-list table td:first-child {
+    width: 150px;
+    font-family: 'Source Code Pro', monospace;
+    color: #90CAF9;
+}
+
+/* Preserve Multiline Formatting */
+pre {
+    font-family: 'Source Code Pro', monospace;
+    white-space: pre-wrap;
+}
+
+/* Background Blur Effect */
+.blur-effect {
+    position: fixed;
+    bottom: 45px;
+    left: -90px;
+    width: 300px;
+    height: 300px;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.497);
+    z-index: 10000;
+    filter: blur(100px);
+}
+
+/* Add a home link to go back to the main page */
+.nav-bar .heading a {
+    color: white;
+    text-decoration: none;
+}

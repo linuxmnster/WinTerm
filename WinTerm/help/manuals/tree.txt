@@ -1,0 +1,4 @@
+
+tree - Display directory structure in a tree format
+Usage: tree [paht]
+   

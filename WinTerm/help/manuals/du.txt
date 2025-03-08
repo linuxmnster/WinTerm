@@ -1,0 +1,7 @@
+du - Show disk usage of files and directories  
+Usage: du [options] <file/directory>  
+Description:  
+  Displays the size of a file or directory.  
+  Use 'du -h' for human-readable format.  
+Example:  
+  du -h myfolder 

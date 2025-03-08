@@ -1,0 +1,7 @@
+win - service to download packages based on ui 
+Usage: win install <package>  
+Description:  
+  easy setup download for cyber security tools.  
+  Use "list" to list the available packages to download  
+Example:  
+  win list  
