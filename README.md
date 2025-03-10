@@ -15,7 +15,9 @@ WinTerm is a **command-line utility** that brings **basic Linux commands** and e
 
 🛠 Installation
   > git clone https://github.com/your-username/WinTerm.git
+> 
   > pip install -r requirements.txt
+> 
   > python winterm.py
 
 📜 License
