@@ -1,6 +1,0 @@
-unzip - Extract contents from a zip file  
-Usage: unzip <zip_file>  
-Description:  
-  Extracts the contents of a .zip archive.  
-Example:  
-  unzip archive.zip

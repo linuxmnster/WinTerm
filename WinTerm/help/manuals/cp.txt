@@ -1,7 +1,0 @@
-cp - Copy files and directories  
-Usage: cp <source> <destination>  
-Description:  
-  Copies a file or directory from source to destination.  
-  Use 'cp <source>, <destination>' to copy directories.  
-Example:  
-  cp file.txt backup.txt    

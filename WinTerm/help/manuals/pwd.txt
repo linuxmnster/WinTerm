@@ -1,7 +1,0 @@
-pwd - Print the full path of the current directory
-Usage: pwd
-Description:
-  Displays the absolute path of the directory the user is currently in.
-Example:
-  pwd
-  Output: C:\Users\Kira\Documents

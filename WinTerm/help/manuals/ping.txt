@@ -1,6 +1,0 @@
-ping - Test network connectivity  
-Usage: ping <hostname/IP>  
-Description:  
-  Sends ICMP packets to check if a host is reachable.  
-Example:  
-  ping google.com  

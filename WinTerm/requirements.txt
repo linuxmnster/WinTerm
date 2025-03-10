@@ -1,6 +1,0 @@
-psutil
-termcolor
-pyfiglet
-googlesearch-python
-phonenumbers
-pypdf2

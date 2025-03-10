@@ -1,0 +1,9 @@
+cd - Change directory  
+Usage: cd <directory_path>  
+Description:  
+  Moves the user into the specified directory.  
+  Use 'cd ..' to move up one level.
+  Use 'cd -' to get back to Desktop.
+  Use 'cd /' to jump to root (C:/).  
+Example:  
+  cd Documents/

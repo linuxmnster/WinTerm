@@ -1,0 +1,6 @@
+clear - Clear the terminal screen  
+Usage: clear  
+Description:  
+  Clears all previous command output from the terminal.  
+Example:  
+  clear 

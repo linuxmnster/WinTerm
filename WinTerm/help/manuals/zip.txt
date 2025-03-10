@@ -1,6 +1,0 @@
-zip - Compress files into a zip archive  
-Usage: zip <zip_file> <file/directory>  
-Description:  
-  Creates a .zip archive containing the specified files or directories.  
-Example:  
-  zip myarchive.zip, file1.txt, file2.txt  

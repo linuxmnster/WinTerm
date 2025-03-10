@@ -1,7 +1,0 @@
-
-ls - list directory contents
-Usage: ls [OPTION]... [FILE]...
-Options:
--a   Show hidden files
-Example:
-ls -a

@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Commands - WinTerm</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Cinzel|Fauna+One|Lobster|Merriweather|Montserrat|Nunito|Open+Sans|Oswald|Poppins|Roboto|Roboto+Condensed|Roboto+Slab|Source+Sans+Pro|Ubuntu|Source+Code+Pro&display=swap">
+    
+    <style>
+        .content h2 {
+            margin-top: 20px;
+            font-size: 1.8rem;
+            color: #90CAF9;
+            text-align: center;
+        }
+
+        .content h3 {
+            margin-top: 15px;
+            margin-bottom: 10px;
+            font-size: 1.5rem;
+            color: #f0f0f0;
+        }
+
+        .content p {
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+            line-height: 1.6;
+            color: #dcdcdc;
+        }
+
+        .command {
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+            border-left: 5px solid #90CAF9;
+            transition: 0.3s ease-in-out;
+        }
+
+        .command:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-3px);
+        }
+
+        .command h2 {
+            color: #90CAF9;
+            font-size: 1.7rem;
+            text-align: left;
+            margin-top: 0;
+        }
+
+        .command p {
+            color: #dcdcdc;
+        }
+
+        pre {
+            background-color: rgba(255, 255, 255, 0.15);
+            padding: 10px;
+            border-radius: 5px;
+            font-family: 'Source Code Pro', monospace;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            color: #fff;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="nav-bar">
+            <div class="heading"><a href="index.html">WinterTerms</a></div>
+            <div class="nav-elements">
+                <p><a href="commands-content.html">Commands</a></p>
+                <p><a href="tools.html">Tools</a></p>
+                <p><a href="services.html">Services</a></p>
+            </div>
+        </div>
+        <div class="content">
+            <div class="headin">
+                <h1>⌨️ Terminal Commands</h1>
+            </div>
+            <div class="context">
+                <p>
+                    Terminal Commands are powerful text-based instructions that allow users to interact with the operating system directly. 
+                    These commands provide efficient ways to navigate, manipulate files, and manage system resources** without a graphical interface.
+                </p>
+
+                <h2>🛠 Available Terminal Commands</h2>
+
+                <div class="command">
+                    <h2>📄 cat - Display File Contents</h2>
+                    <p><strong>Description:</strong> Prints the content of a file to the terminal.</p>
+                    <p><strong>Usage:</strong></p>
+                    <pre>cat &lt;file_name&gt;</pre>
+                    <p><strong>Example:</strong></p>
+                    <pre>cat myfile.txt</pre>
+                </div>
+
+                <div class="command">
+                    <h2>📁 cd - Change Directory</h2>
+                    <p><strong>Description:</strong> Moves the user into the specified directory.</p>
+                    <ul>
+                        <li>Use 'cd ..' to move up one level.</li>
+                        <li>Use 'cd -' to get back to Desktop.</li>
+                        <li>Use 'cd /' to jump to root (C:/).</li>
+                    </ul>
+                    <p><strong>Usage:</strong></p>
+                    <pre>cd &lt;directory_path&gt;</pre>
+                    <p><strong>Example:</strong></p>
+                    <pre>cd Documents/</pre>
+                </div>
+
+                <div class="command">
+                    <h2>🧹 clear - Clear Terminal Screen</h2>
+                    <p><strong>Description:</strong> Clears all previous command output from the terminal.</p>
+                    <p><strong>Usage:</strong></p>
+                    <pre>clear</pre>
+                    <p><strong>Example:</strong></p>
+                    <pre>clear</pre>
+                </div>
+
+                <div class="command">
+                    <h2>📋 cp - Copy Files and Directories</h2>
+                    <p><strong>Description:</strong> Copies a file or directory from source to destination.</p>
+                    <ul>
+                        <li>Use 'cp &lt;source&gt;, &lt;destination&gt;' to copy directories.</li>
+                    </ul>
+                    <p><strong>Usage:</strong></p>
+                    <pre>cp &lt;source&gt; &lt;destination&gt;</pre>
+                    <p><strong>Example:</strong></p>
+                    <pre>cp file.txt backup.txt</pre>
+                </div>
+
+                <div class="command">
+                    <h2>💾 df - Display Disk Space Usage</h2>
+                    <p><strong>Description:</strong> Shows the available and used disk space for mounted filesystems.</p>
+                    <p><strong>Usage:</strong></p>
+                    <pre>df</pre>
+                    <p><strong>Example:</strong></p>
+                    <pre>df</pre>
+                </div>
+
+                <div class="command">
+                    <h2>📊 du - Show Disk Usage</h2>
+                    <p><strong>Description:</strong> Displays the size of a file or directory.</p>
+                    <ul>
+                        <li>Use 'du -h' for human-readable format.</li>
+                    </ul>
+                    <p><strong>Usage:</strong></p>
+                    <pre>du [options] &lt;file/directory&gt;</pre>
+                    <p><strong>Example:</strong></p>
+                    <pre>du -h myfolder</pre>
+                </div>
+
+                <div class="command">
+                    <h2>👀 head - Display First Lines</h2>
+                    <p><strong>Description:</strong> Shows the first 10 lines of a file by default.</p>
+                    <p><strong>Usage:</strong></p>
+                    <pre>head &lt;file_name&gt;</pre>
+                    <p><strong>Example:</strong></p>
+                    <pre>head myfile.txt</pre>
+                </div>
+
+                <div class="command">
+                    <h2>🛑 kill - Terminate a Process</h2>
+                    <p><strong>Description:</strong> Sends a termination signal to the process with the given Process ID (PID).</p>
+                    <ul>
+                        <li>Use 'kill -f &lt;PID&gt;' for force termination.</li>
+                    </ul>
+                    <p><strong>Usage:</strong></p>
+                    <pre>kill &lt;PID&gt;</pre>
+                    <p><strong>Example:</strong></p>
+                    <pre>kill 1234</pre>
+                </div>
+
+                <div class="command">
+                    <h2>📋 ls - List Directory Contents</h2>
+                    <p><strong>Description:</strong> Lists files and directories in the current location.</p>
+                    <p><strong>Options:</strong></p>
+                    <ul>
+                        <li>-a   Show hidden files</li>
+                    </ul>
+                    <p><strong>Usage:</strong></p>
+                    <pre>ls [OPTION]... [FILE]...</pre>
+                    <p><strong>Example:</strong></p>
+                    <pre>ls -a</pre>
+                </div>
+
+                <div class="command">
+                    <h2>📁 mkdir - Create a New Directory</h2>
+                    <p><strong>Description:</strong> Creates a new directory with the specified name.</p>
+                    <ul>
+                        <li>-m for multiple directories</li>
+                    </ul>
+                    <p><strong>Usage:</strong></p>
+                    <pre>mkdir &lt;directory_name&gt;</pre>
+                    <p><strong>Example:</strong></p>
+                    <pre>mkdir myfolder</pre>
+                </div>
+
+                <div class="command">
+                    <h2>🔄 mv - Move or Rename Files</h2>
+                    <p><strong>Description:</strong> Moves a file or directory to a new location. Can also be used to rename files.</p>
+                    <p><strong>Usage:</strong></p>
+                    <pre>mv &lt;source&gt; &lt;destination&gt;</pre>
+                    <p><strong>Example:</strong></p>
+                    <pre>mv oldname.txt newname.txt
+mv file.txt Documents/</pre>
+                </div>
+
+                <div class="command">
+                    <h2>🌐 ping - Test Network Connectivity</h2>
+                    <p><strong>Description:</strong> Sends ICMP packets to check if a host is reachable.</p>
+                    <p><strong>Usage:</strong></p>
+                    <pre>ping &lt;hostname/IP&gt;</pre>
+                    <p><strong>Example:</strong></p>
+                    <pre>ping google.com</pre>
+                </div>
+
+                <div class="command">
+                    <h2>⚙️ ps - Display Active Processes</h2>
+                    <p><strong>Description:</strong> Lists currently running processes.</p>
+                    <p><strong>Usage:</strong></p>
+                    <pre>ps</pre>
+                    <p><strong>Example:</strong></p>
+                    <pre>ps</pre>
+                </div>
+
+                <div class="command">
+                    <h2>🧭 pwd - Print Working Directory</h2>
+                    <p><strong>Description:</strong> Displays the absolute path of the directory the user is currently in.</p>
+                    <p><strong>Usage:</strong></p>
+                    <pre>pwd</pre>
+                    <p><strong>Example:</strong></p>
+                    <pre>pwd
+Output: C:\Users\Kira\Documents</pre>
+                </div>
+
+                <div class="command">
+                    <h2>🔄 restart - Restart the System</h2>
+                    <p><strong>Description:</strong> Reboots the system immediately.</p>
+                    <p><strong>Usage:</strong></p>
+                    <pre>restart [time_in_sec]</pre>
+                    <p><strong>Example:</strong></p>
+                    <pre>restart</pre>
+                </div>
+
+                <div class="command">
+                    <h2>🗑️ rm - Remove Files or Directories</h2>
+                    <p><strong>Description:</strong> Deletes the specified file.</p>
+                    <ul>
+                        <li>Use 'rm -f &lt;directory&gt;' to remove a file with its content.</li>
+                        <li>Use 'rm -r &lt;dir1&gt;, &lt;dir2&gt;' to remove multiple files</li>
+                    </ul>
+                    <p><strong>Usage:</strong></p>
+                    <pre>rm &lt;file/directory_name&gt;</pre>
+                    <p><strong>Example:</strong></p>
+                    <pre>rm myfile.txt
+rm -r myfolder</pre>
+                </div>
+
+                <div class="command">
+                    <h2>🗂️ rmdir - Remove Empty Directory</h2>
+                    <p><strong>Description:</strong> Deletes an empty directory.</p>
+                    <ul>
+                        <li>-m to remove multiple directory.</li>
+                        <li>-f to remove non empty directory.</li>
+                    </ul>
+                    <p><strong>Usage:</strong></p>
+                    <pre>rmdir &lt;directory_name&gt;</pre>
+                    <p><strong>Example:</strong></p>
+                    <pre>rmdir myfolder</pre>
+                </div>
+
+                <div class="command">
+                    <h2>⏻ shutdown - Power Off the System</h2>
+                    <p><strong>Description:</strong> Schedules or immediately shuts down the system.</p>
+                    <ul>
+                        <li>Use 'shutdown' to shut down immediately.</li>
+                    </ul>
+                    <p><strong>Usage:</strong></p>
+                    <pre>shutdown [time_in_sec]</pre>
+                    <p><strong>Example:</strong></p>
+                    <pre>shutdown</pre>
+                </div>
+
+                <div class="command">
+                    <h2>👁️ tail - Display Last Lines</h2>
+                    <p><strong>Description:</strong> Shows the last 10 lines of a file by default.</p>
+                    <p><strong>Usage:</strong></p>
+                    <pre>tail &lt;file_name&gt;</pre>
+                    <p><strong>Example:</strong></p>
+                    <pre>tail myfile.txt</pre>
+                </div>
+
+                <div class="command">
+                    <h2>✏️ touch - Create Empty File</h2>
+                    <p><strong>Description:</strong> Creates a new empty file if it does not exist.</p>
+                    <ul>
+                        <li>Use 'touch -m &lt;file1&gt;, &lt;file2&gt;' to create multiple files at a time.</li>
+                    </ul>
+                    <p><strong>Usage:</strong></p>
+                    <pre>touch &lt;file_name&gt;</pre>
+                    <p><strong>Example:</strong></p>
+                    <pre>touch myfile.txt</pre>
+                </div>
+
+                <div class="command">
+                    <h2>🌳 tree - Display Directory Structure</h2>
+                    <p><strong>Description:</strong> Shows the directory structure in a hierarchical tree-like format.</p>
+                    <p><strong>Usage:</strong></p>
+                    <pre>tree [path]</pre>
+                    <p><strong>Example:</strong></p>
+                    <pre>tree</pre>
+                </div>
+
+                <div class="command">
+                    <h2>📦 unzip - Extract ZIP Contents</h2>
+                    <p><strong>Description:</strong> Extracts the contents of a .zip archive.</p>
+                    <p><strong>Usage:</strong></p>
+                    <pre>unzip &lt;zip_file&gt;</pre>
+                    <p><strong>Example:</strong></p>
+                    <pre>unzip archive.zip</pre>
+                </div>
+
+                <div class="command">
+                    <h2>🗜️ zip - Compress Files</h2>
+                    <p><strong>Description:</strong> Creates a .zip archive containing the specified files or directories.</p>
+                    <p><strong>Usage:</strong></p>
+                    <pre>zip &lt;zip_file&gt; &lt;file/directory&gt;</pre>
+                    <p><strong>Example:</strong></p>
+                    <pre>zip myarchive.zip file1.txt file2.txt</pre>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="blur-effect"></div>
+</body>
+
+</html>

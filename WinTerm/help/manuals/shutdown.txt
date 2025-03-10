@@ -1,7 +1,0 @@
-shutdown - Power off the system  
-Usage: shutdown [time_in_sec]  
-Description:  
-  Schedules or immediately shuts down the system.  
-  Use 'shutdown' to shut down immediately.  
-Example:  
-  shutdown

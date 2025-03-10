@@ -1,6 +1,0 @@
-df - Display disk space usage  
-Usage: df  
-Description:  
-  Shows the available and used disk space for mounted filesystems.  
-Example:  
-  df  

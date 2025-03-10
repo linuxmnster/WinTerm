@@ -1,9 +1,0 @@
-rm - Remove a file or directory  
-Usage: rm <file/directory_name>  
-Description:  
-  Deletes the specified file.  
-  Use 'rm -f <directory>' to remove a file with its content.
-  Use 'rm -r <dir1>, <dir2>' to remove multiple files  
-Example:  
-  rm myfile.txt  
-  rm -r myfolder  

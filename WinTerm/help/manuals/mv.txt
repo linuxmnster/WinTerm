@@ -1,8 +1,0 @@
-mv - Move or rename a file/directory  
-Usage: mv <source> <destination>  
-Description:  
-  Moves a file or directory to a new location.  
-  Can also be used to rename files.  
-Example:  
-  mv oldname.txt, newname.txt  
-  mv file.txt, Documents/  

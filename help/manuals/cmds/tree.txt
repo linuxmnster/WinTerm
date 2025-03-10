@@ -1,0 +1,5 @@
+
+tree - Display directory structure in a tree format
+Usage: tree [paht]
+Use "tree -a" for hidden files and directoryes also
+   

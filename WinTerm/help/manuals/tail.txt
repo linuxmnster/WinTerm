@@ -1,6 +1,0 @@
-tail - Display the last few lines of a file  
-Usage: tail <file_name>  
-Description:  
-  Shows the last 10 lines of a file by default.    
-Example:  
-  tail myfile.txt  

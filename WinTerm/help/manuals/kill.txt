@@ -1,7 +1,0 @@
-kill - Terminate a process  
-Usage: kill <PID>  
-Description:  
-  Sends a termination signal to the process with the given Process ID (PID).  
-  Use 'kill -f <PID>' for force termination.  
-Example:  
-  kill 1234

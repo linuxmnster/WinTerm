@@ -1,6 +1,0 @@
-ps - Display active processes  
-Usage: ps
-Description:  
-  Lists currently running processes.  
-Example:  
-  ps  
