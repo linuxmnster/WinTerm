@@ -1,9 +1,9 @@
 *---------------------- Commands ----------------------*-----------------Tools-----------------*
-| ls       : List all files and directories            | NANO : GNU Text editor                |
+| ls       : List all files and directories            | NANO     : GNU TEXT EDITOR            |
 | tree     : Display directory structure in tree form  | SHERLOCK : SOCIAL MEADIA HUNT DOWN    |
 | pwd      : Print the current working directory       | EXIFTOOL : EXTRACT META DATA          |
-| mkdir    : Create one or multiple directories        | STRINGS : EXTRACT PRINTABLE STRINGS   |
-| cd       : Change directory                          |                                       |
+| mkdir    : Create one or multiple directories        | STRINGS  : EXTRACT PRINTABLE STRINGS  |
+| cd       : Change directory                          | TGPT     : TERMINAL BASED GPT         |
 | rmdir    : Remove a directory (empty or force)       |                                       |
 | rm       : Remove a file                             |                                       |
 | cp       : Copy files and directories                |                                       |
@@ -24,4 +24,5 @@
 | restart  : Restart the system                        |                                       |
 *----------------------------------------------------------------------------------------------*
 | FOR DETAILED DOCUMENTATION ABOUT TOOLS AND SERVICES USE "help -web" COMMAND                  |
+| TO RUN TOOLS USE "rn <tool_name> <operation>"                                                |
 *----------------------------------------------------------------------------------------------*
