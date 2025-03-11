@@ -1,5 +1,21 @@
-history | 2025-03-11 15:33:07 | not_executed
-clear | 2025-03-11 15:33:10 | not_executed
-clear | 2025-03-11 15:33:10 | not_executed
-clear | 2025-03-11 15:33:10 | executed
-exit | 2025-03-11 15:33:11 | not_executed
+ls | 2025-03-11 18:52:26 | not_executed
+ls | 2025-03-11 18:52:26 | executed
+clear | 2025-03-11 18:52:27 | not_executed
+clear | 2025-03-11 18:52:27 | executed
+help | 2025-03-11 18:52:30 | not_executed
+rn tgpt "step by step process to git commit" | 2025-03-11 18:52:47 | not_executed
+pwd | 2025-03-11 18:52:56 | not_executed
+pwd | 2025-03-11 18:52:56 | executed
+cd OneDrive/Desktop/winterm | 2025-03-11 18:53:06 | not_executed
+cd OneDrive/Desktop/winterm | 2025-03-11 18:53:06 | executed
+clesar | 2025-03-11 18:53:08 | not_executed
+clesar | 2025-03-11 18:53:08 | executed
+clear | 2025-03-11 18:53:10 | not_executed
+clear | 2025-03-11 18:53:10 | executed
+ls | 2025-03-11 18:53:11 | not_executed
+ls | 2025-03-11 18:53:11 | executed
+clear | 2025-03-11 18:53:12 | not_executed
+clear | 2025-03-11 18:53:12 | executed
+rn tgpt "step by step process to git commit" | 2025-03-11 18:53:20 | not_executed
+git add . | 2025-03-11 18:53:33 | not_executed
+git add . | 2025-03-11 18:53:33 | executed

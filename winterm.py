@@ -50,7 +50,7 @@ while True:
 
     try:
         cmd = input(colored("Kira", "red") + colored("@", "white") + colored("WinTerm", "blue") + colored("> ", "white")).strip()
-        history.save_command(cmd, executed=False)  # Assume failed first
+        history.save_command(cmd, executed=False)
 
         # Ignore empty commands (only spaces or enter)
         if not cmd:
@@ -86,14 +86,10 @@ while True:
             win.service(cmd[4:])
 
         else:
-            running_process = True  # Command execution starts
-            history.save_command(cmd, executed=False)  # Assume failure first
-            try:
-                cmd_function_call.call(cmd)
-                history.save_command(cmd, executed=True)  # ✅ If success, mark executed
-            except Exception:
-                history.save_command(cmd, executed=False)  # ❌ If failure, keep it failed
-            running_process = False  # Command execution ends
+            running_process = True
+            history.save_command(cmd, executed=True)  # Mark as executed
+            cmd_function_call.call(cmd)
+            running_process = False
 
     except KeyboardInterrupt:
         signal_handler(None, None)  # Call handler manually
