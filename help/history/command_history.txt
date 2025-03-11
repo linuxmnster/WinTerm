@@ -1,0 +1,5 @@
+history | 2025-03-11 15:33:07 | not_executed
+clear | 2025-03-11 15:33:10 | not_executed
+clear | 2025-03-11 15:33:10 | not_executed
+clear | 2025-03-11 15:33:10 | executed
+exit | 2025-03-11 15:33:11 | not_executed

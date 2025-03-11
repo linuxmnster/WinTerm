@@ -19,7 +19,8 @@ sys.path.append(tools_path)
 services = os.path.join(os.path.dirname(__file__), "services")
 sys.path.append(services)
 
-import help
+from help import helpfinder
+from help.history import history
 from CLI import cmd_function_call
 from tools import toolkit
 from services import win
@@ -43,9 +44,13 @@ signal.signal(signal.SIGINT, signal_handler)
 
 cmd_function_call.call("clear")
 
+
+
 while True:
+
     try:
         cmd = input(colored("Kira", "red") + colored("@", "white") + colored("WinTerm", "blue") + colored("> ", "white")).strip()
+        history.save_command(cmd, executed=False)  # Assume failed first
 
         # Ignore empty commands (only spaces or enter)
         if not cmd:
@@ -55,10 +60,21 @@ while True:
             break
         
         elif cmd == "help":
-            help.help()
+            helpfinder.help()
 
         elif cmd == "help -web":
-            help.open_html()
+            helpfinder.open_html()
+
+        elif cmd == "history -c":
+            history.clear_history()
+
+        elif cmd == "history":
+            history_data = history.read_history()
+            if not history_data:
+                print(colored("No command history found!", "yellow"))
+            else:
+                for line in history_data:
+                    print(line)  # ✅ Now prints formatted history with colors
 
         elif cmd.startswith("man "):
             help.man(cmd[4:])
@@ -70,9 +86,14 @@ while True:
             win.service(cmd[4:])
 
         else:
-            running_process = True  # A command is being executed
-            cmd_function_call.call(cmd)
-            running_process = False  # Reset after execution
+            running_process = True  # Command execution starts
+            history.save_command(cmd, executed=False)  # Assume failure first
+            try:
+                cmd_function_call.call(cmd)
+                history.save_command(cmd, executed=True)  # ✅ If success, mark executed
+            except Exception:
+                history.save_command(cmd, executed=False)  # ❌ If failure, keep it failed
+            running_process = False  # Command execution ends
 
     except KeyboardInterrupt:
         signal_handler(None, None)  # Call handler manually
