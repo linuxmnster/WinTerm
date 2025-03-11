@@ -20,7 +20,7 @@
 | kill     : Terminate a process by PID                |                                       |
 | ping     : Check network connectivity                |                                       |
 | clear    : Clear the terminal screen                 |                                       |
-| shutdo   : Shutdown the system                       |                                       |
+| shutdown : Shutdown the system                       |                                       |
 | restart  : Restart the system                        |                                       |
 *----------------------------------------------------------------------------------------------*
 | FOR DETAILED DOCUMENTATION ABOUT TOOLS AND SERVICES USE "help -web" COMMAND                  |

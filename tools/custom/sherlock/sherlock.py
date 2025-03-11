@@ -1,4 +1,5 @@
 import requests
+import os
 from termcolor import colored
 from concurrent.futures import ThreadPoolExecutor
 
@@ -23,18 +24,22 @@ SOCIAL_MEDIA_PLATFORMS = {
 }
 
 def find_social_accounts(username):
-    """Find social media accounts for the given username."""
+    """Find social media accounts for the given username and store results in a temporary file."""
     
+    temp_file = "results.txt"
+
     def check_username(platform, url):
         """Check if the username exists on a given platform."""
         try:
             response = requests.get(url, timeout=5)
-            if response.status_code == 200:
-                print(colored(f"[✔] {platform}: {url}", "green"))
-            else:
-                print(colored(f"[✘] {platform}", "red"))
+            with open(temp_file, "a") as file:
+                if response.status_code == 200:
+                    file.write(f"[✔] {platform}: {url}\n")
+                else:
+                    file.write(f"[✘] {platform}\n")
         except requests.exceptions.RequestException:
-            print(colored(f"[✘] Error checking {platform}", "red"))
+            with open(temp_file, "a") as file:
+                file.write(f"[✘] Error checking {platform}\n")
 
     print(colored(f"\n🔍 Searching for username: {username}\n", "cyan"))
 
@@ -43,4 +48,11 @@ def find_social_accounts(username):
             url = url_template.format(username)
             executor.submit(check_username, platform, url)
 
+    # Print results and delete file
+    print(colored("\n🔹 Results:\n", "yellow"))
+    with open(temp_file, "r") as file:
+        for line in file:
+            print(colored(line.strip(), "green" if "[✔]" in line else "red"))
+
+    os.remove(temp_file)  # Remove the file after displaying results
     print(colored("\n✅ Search completed!\n", "yellow"))

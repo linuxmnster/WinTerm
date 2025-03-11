@@ -62,28 +62,8 @@ def extract_strings(file_path):
         print(f"Unexpected Error: {e}")
 
 def find_social_accounts(username):
-    output_file = "output.txt"
-    try:
-        print(colored(f"\n🔍 Searching for username: {username}\n", "cyan"))
-        with open(output_file, "w") as f:
-            subprocess.run(["sherlock", username], stdout=f, stderr=subprocess.DEVNULL, text=True)
-        with open(output_file, "r") as f:
-            results = f.readlines()
-        for line in results:
-            if "[+]" in line:
-                print(colored(line.strip(), "green"))  
-            elif "INFO" in line:
-                print(colored(line.strip(), "blue")) 
-            elif "ERROR" in line:
-                print(colored(line.strip(), "red"))  
-            else:
-                print(colored(line.strip(), "white"))  
-    except Exception as e:
-        print(colored(f"❌ Error: {e}", "red"))
-    finally:
-        time.sleep(1)
-        if os.path.exists(output_file):
-            os.remove(output_file)
+    from .sherlock import sherlock
+    sherlock.find_social_accounts(username)
 
 def run_tgpt(command):
     """Runs tgpt.exe with a given string command."""
@@ -97,3 +77,11 @@ def run_tgpt(command):
         subprocess.run([tgpt_path, command], check=True)
     except Exception as e:
         print(f"Error: {e}")
+
+def binwalk(file):
+    from .binwalk import binwalk_tool
+    binwalk_tool.scan_and_extract(file)
+
+def find_file_details(path):
+    from .file import file
+    file.file_command(path)
