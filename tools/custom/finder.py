@@ -2,7 +2,6 @@ import subprocess
 import time
 import os
 from termcolor import colored
-import sys
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 
