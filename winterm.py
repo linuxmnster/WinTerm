@@ -47,18 +47,16 @@ cmd_function_call.call("clear")
 
 
 while True:
-
     try:
         cmd = input(colored("Kira", "red") + colored("@", "white") + colored("WinTerm", "blue") + colored("> ", "white")).strip()
-        history.save_command(cmd, executed=False)
 
-        # Ignore empty commands (only spaces or enter)
+        # Ignore empty commands
         if not cmd:
-            continue  # Just go to the next prompt
+            continue
 
         if cmd == "exit":
             break
-        
+
         elif cmd == "help":
             helpfinder.help()
 
@@ -69,15 +67,10 @@ while True:
             history.clear_history()
 
         elif cmd == "history":
-            history_data = history.read_history()
-            if not history_data:
-                print(colored("No command history found!", "yellow"))
-            else:
-                for line in history_data:
-                    print(line)  # ✅ Now prints formatted history with colors
+            history.read_history()
 
         elif cmd.startswith("man "):
-            help.man(cmd[4:])
+            helpfinder.man(cmd[4:])
 
         elif cmd.startswith("rn "):
             toolkit.check(cmd[3:])
@@ -87,7 +80,7 @@ while True:
 
         else:
             running_process = True
-            history.save_command(cmd, executed=True)  # Mark as executed
+            history.save_command(cmd)  # ✅ Save the command only ONCE
             cmd_function_call.call(cmd)
             running_process = False
 
