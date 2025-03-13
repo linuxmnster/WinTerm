@@ -62,8 +62,42 @@ def extract_strings(file_path):
         print(f"Unexpected Error: {e}")
 
 def find_social_accounts(username):
-    from .sherlock import sherlock
-    sherlock.find_social_accounts(username)
+    """Run Sherlock and delete the generated text file after execution."""
+    print(f"🔍 Searching for username: {username}")
+
+    # ✅ Corrected path to Sherlock inside 'custom/sherlock/'
+    sherlock_path = os.path.join(os.path.dirname(__file__), "sherlock", "sherlock.py")
+
+    # Ensure the file exists before running
+    if not os.path.exists(sherlock_path):
+        print(f"❌ Sherlock script not found at {sherlock_path}")
+        return
+
+    # Run Sherlock script
+    subprocess.run(["python", sherlock_path, username], cwd=os.path.dirname(sherlock_path))
+
+    # File created by Sherlock
+    result_file = f"{username}.txt"
+
+    # Wait to ensure the file is written
+    time.sleep(2)
+
+    # Check if the file exists
+    if os.path.exists(result_file):
+        try:
+            with open(result_file, "r", encoding="utf-8") as file:
+                results = file.read().strip()  # Read and remove extra spaces/new lines
+
+            if results:  # ✅ Only print if results exist
+                print("\n" + "=" * 50)
+                print(f"🔍 Search Results for {username}:")
+                print(results)
+                print("=" * 50 + "\n")
+
+            os.remove(result_file)  # ✅ Delete file without printing "Deleted temporary file"
+
+        except Exception as e:
+            print(f"⚠️ Error deleting file {result_file}: {e}")
 
 def run_tgpt(command):
     """Runs tgpt.exe with a given string command."""
@@ -78,10 +112,3 @@ def run_tgpt(command):
     except Exception as e:
         print(f"Error: {e}")
 
-def binwalk(file):
-    from .binwalk import binwalk_tool
-    binwalk_tool.scan_and_extract(file)
-
-def find_file_details(path):
-    from .file import file
-    file.file_command(path)

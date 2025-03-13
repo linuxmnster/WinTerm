@@ -1,27 +1,39 @@
 from .custom import finder
-import os
 
 def check(rn):
-    if rn == "nano " + rn[5:]:
-        finder.open_with_nano(rn[5:])
+    """Validate and execute commands based on user input."""
     
-    elif rn == "sherlock " + rn[9:]:
-        finder.find_social_accounts(rn[9:])
-    
-    elif rn == "exiftool " + rn[9:]:
-        finder.extract_metadata(rn[9:])
+    # Sherlock: Finds social accounts
+    if rn.startswith("sherlock "):
+        username = rn[9:].strip()  # Extract the username
+        if username:
+            finder.find_social_accounts(username)
+        else:
+            print("❌ Usage: sherlock <username>")
 
-    elif rn == "strings " + rn[8:]:
-        finder.extract_strings(rn[8:])
+    # Open with Nano
+    elif rn.startswith("nano "):
+        finder.open_with_nano(rn[5:].strip())
 
-    elif rn == "file " + rn[5:]:
-        finder.find_file_details(rn[5:])
+    # Extract metadata using ExifTool
+    elif rn.startswith("exiftool "):
+        finder.extract_metadata(rn[9:].strip())
 
-    elif rn == "tgpt " + rn[5:]:
-        finder.run_tgpt(rn[5:])
+    # Extract strings from a file
+    elif rn.startswith("strings "):
+        finder.extract_strings(rn[8:].strip())
 
-    elif rn == "binwalk " + rn[8:]:
-        finder.binwalk(rn[8:])
+    # Get file details
+    elif rn.startswith("file "):
+        finder.find_file_details(rn[5:].strip())
 
-    elif rn == "file " + rn[5:]:
-        finder.find_file_details(rn[5:])
+    # Run Terminal GPT (tgpt)
+    elif rn.startswith("tgpt "):
+        finder.run_tgpt(rn[5:].strip())
+
+    # Perform binwalk analysis
+    elif rn.startswith("binwalk "):
+        finder.binwalk(rn[8:].strip())
+
+    else:
+        print("❌ Invalid command. Type 'help' to see available commands.")
