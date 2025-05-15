@@ -1,6 +1,6 @@
 import stat
 import time
-import CLS
+from . import CLS
 
 #color function
 def colorize(text, text_color=None, bg_color=None, style=None):
@@ -60,20 +60,23 @@ def update():
 
 #commands
 def check_command(raw_input: str):
-    command = raw_input.strip().lower()
+    command = raw_input.strip()
 
     if not command:
         return True
 
-    if command in ["cls", "clear"]:
+    base = command.split()[0].lower()
+
+    if base in ["cls", "clear"]:
         CLS.clear_screen()
 
-    elif command in ["pwd"]:
+    elif base == "pwd":
         CLS.pwd()
 
-    elif command == "ls":
-        ls_command(user_input)
+    elif base == "ls":
+        CLS.ls_command(command) 
 
     else:
-        print(f"⚠️  Unknown command : {raw_input}")
+        print(f"⚠️  Unknown command: {command}")
+
         

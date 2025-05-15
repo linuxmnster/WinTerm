@@ -1,5 +1,5 @@
 from time import sleep
-from CLI import CLS
+from CLI.CLS import home_path
 from CLI import CLS_check
 
 def main():

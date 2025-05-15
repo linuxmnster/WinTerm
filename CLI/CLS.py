@@ -1,7 +1,7 @@
 import os
 import stat
 import time
-import CLS_check
+from . import CLS_check
 
 def home_path():
     try:
@@ -22,58 +22,37 @@ def pwd():
     print(os.getcwd())
 
 #ls
-def ls_command(input_command):
-    # Get the current directory
-    current_dir = os.getcwd()
+def ls_command(cmd):
+    flags = ''.join(arg.strip('-') for arg in cmd.split()[1:] if arg.startswith('-'))
+    show_all = 'a' in flags
+    show_long = 'l' in flags
+    human = 'h' in flags
+    sort_time = 't' in flags
+    reverse = 'r' in flags
 
-    # Remove extra spaces and split by space
-    command_parts = input_command.strip().split()
-
-    # Check if flags are passed
-    flags = command_parts[1:] if len(command_parts) > 1 else []
-
-    # Get all files and directories
     try:
-        files = os.listdir(current_dir)
-    except FileNotFoundError:
-        print("Directory not found.")
-        return
+        files = os.listdir()
+        if not show_all:
+            files = [f for f in files if not f.startswith('.')]
+        files.sort(key=lambda f: os.path.getmtime(f) if sort_time else f.lower(), reverse=reverse)
 
-    # If '-a' flag is not set, exclude hidden files
-    if '-a' not in flags:
-        files = [f for f in files if not f.startswith('.')]
+        for f in files:
+            path = os.path.join(os.getcwd(), f)
+            stat_info = os.stat(path)
+            name = CLS_check.colorize(f, "blue", None) if os.path.isdir(path) else CLS_check.colorize(f, "green", None)
 
-    # If '-l' flag is set, show details
-    if '-l' in flags:
-        for file in files:
-            file_path = os.path.join(current_dir, file)
-            try:
-                stats = os.stat(file_path)
-                permissions = oct(stats.st_mode)[-3:]
-                size = stats.st_size
-                mtime = time.ctime(stats.st_mtime)
-
-                # Colorize file names
-                if stat.S_ISDIR(stats.st_mode):  # Check if it's a directory
-                    file = CLS_check.colorize(file, "blue", None, None)  # Color directories blue
-                else:
-                    file = CLS_check.colorize(file, "green", None, None)  # Color regular files green
-
-                print(f"{permissions} {size} {mtime} {file}")
-            except Exception:
-                print(f"Error with file {file}")
-    else:
-        # If no '-l', just print file names
-        for file in files:
-            # Colorize file names
-            file_path = os.path.join(current_dir, file)
-            try:
-                stats = os.stat(file_path)
-                if stat.S_ISDIR(stats.st_mode):
-                    file = CLS_check.colorize(file, "blue", None, None)  # Color directories blue
-                else:
-                    file = CLS_check.colorize(file, "green", None, None)  # Color regular files green
-                print(file)
-            except Exception:
-                print(f"Error with file {file}")
-    
+            if show_long:
+                perms = stat.filemode(stat_info.st_mode)
+                size = stat_info.st_size
+                if human:
+                    for unit in ['B','K','M','G','T']:
+                        if size < 1024:
+                            break
+                        size /= 1024
+                    size = f"{size:.1f}{unit}"
+                mtime = time.strftime('%b %d %H:%M', time.localtime(stat_info.st_mtime))
+                print(f"{perms} {size:>6} {mtime} {name}")
+            else:
+                print(name)
+    except Exception as e:
+        print("Error:", e)
