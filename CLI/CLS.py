@@ -14,6 +14,7 @@ def home_path():
         except FileNotFoundError:
             path = os.path.expanduser("~")
             os.chdir(path)
+    return path
 
 def clear_screen():
     os.system("cls" if os.name == "nt" else "clear")
@@ -68,3 +69,24 @@ def ls_command(cmd):
 
     except Exception as e:
         print("Error:", e)
+
+#cd
+def cd_command(cmd):
+    parts = cmd.strip().split(maxsplit=1)
+    if len(parts) == 1 or parts[1] == "~":
+        path = home_path()
+    elif parts[1] == "/":
+        path = "C:\\"  
+    else:
+        path = os.path.abspath(os.path.expanduser(parts[1]))
+
+    try:
+        os.chdir(path)
+    except FileNotFoundError:
+        print(f"❌ Directory not found: {path}")
+    except NotADirectoryError:
+        print(f"⚠️ Not a directory: {path}")
+    except PermissionError:
+        print(f"🚫 Permission denied: {path}")
+    except Exception as e:
+        print(f"⚠️ Error: {e}")

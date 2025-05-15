@@ -77,6 +77,9 @@ def check_command(raw_input: str):
         CLS.ls_command(command)
         print()
 
+    elif base.startswith("cd"):
+        CLS.cd_command(raw_input)
+
     else:
         print(f"⚠️  Unknown command: {command}")
 
