@@ -34,14 +34,18 @@ def ls_command(cmd):
         files = os.listdir()
         if not show_all:
             files = [f for f in files if not f.startswith('.')]
+
         files.sort(key=lambda f: os.path.getmtime(f) if sort_time else f.lower(), reverse=reverse)
 
-        for f in files:
-            path = os.path.join(os.getcwd(), f)
-            stat_info = os.stat(path)
-            name = CLS_check.colorize(f, "blue", None) if os.path.isdir(path) else CLS_check.colorize(f, "green", None)
+        if show_long:
+            for f in files:
+                path = os.path.join(os.getcwd(), f)
+                stat_info = os.stat(path)
+                is_dir = os.path.isdir(path)
 
-            if show_long:
+                name = f"📁 {f}" if is_dir else f"📄 {f}"
+                name = CLS_check.colorize(name, "blue", None, "bold") if is_dir else CLS_check.colorize(name, "white", None)
+
                 perms = stat.filemode(stat_info.st_mode)
                 size = stat_info.st_size
                 if human:
@@ -52,7 +56,15 @@ def ls_command(cmd):
                     size = f"{size:.1f}{unit}"
                 mtime = time.strftime('%b %d %H:%M', time.localtime(stat_info.st_mtime))
                 print(f"{perms} {size:>6} {mtime} {name}")
-            else:
-                print(name)
+        else:
+            output = []
+            for f in files:
+                path = os.path.join(os.getcwd(), f)
+                is_dir = os.path.isdir(path)
+                name = f"📁 {f}" if is_dir else f"📄 {f}"
+                name = CLS_check.colorize(name, "blue", None, "bold") if is_dir else CLS_check.colorize(name, "white", None)
+                output.append(name)
+            print('\t'.join(output))
+
     except Exception as e:
         print("Error:", e)

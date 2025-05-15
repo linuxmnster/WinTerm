@@ -8,7 +8,7 @@ def main():
 
     while True:
         try:
-            user_input = input(CLS_check.colorize("WinTerm", "blue", None, "bold") + "> ").strip()
+            user_input = input(CLS_check.colorize("WinTerm", "red", None, "bold") + "> ").strip()
 
             if not user_input:
                 continue

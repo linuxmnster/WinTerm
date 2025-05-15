@@ -74,7 +74,8 @@ def check_command(raw_input: str):
         CLS.pwd()
 
     elif base == "ls":
-        CLS.ls_command(command) 
+        CLS.ls_command(command)
+        print()
 
     else:
         print(f"⚠️  Unknown command: {command}")
