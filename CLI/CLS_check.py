@@ -79,6 +79,9 @@ def check_command(raw_input: str):
 
     elif base.startswith("cd"):
         CLS.cd_command(raw_input)
+    
+    elif base.startswith("mkdir"):
+        CLS.mkdir_command(raw_input)
 
     else:
         print(f"⚠️  Unknown command: {command}")

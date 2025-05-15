@@ -32,21 +32,25 @@ def ls_command(cmd):
     reverse = 'r' in flags
 
     try:
-        files = os.listdir()
+        entries = os.listdir()
         if not show_all:
-            files = [f for f in files if not f.startswith('.')]
+            entries = [f for f in entries if not f.startswith('.')]
 
-        files.sort(key=lambda f: os.path.getmtime(f) if sort_time else f.lower(), reverse=reverse)
+        # Sort entries by time or name
+        entries.sort(key=lambda f: os.path.getmtime(f) if sort_time else f.lower(), reverse=reverse)
 
-        if show_long:
-            for f in files:
-                path = os.path.join(os.getcwd(), f)
-                stat_info = os.stat(path)
-                is_dir = os.path.isdir(path)
+        # Split into directories and files
+        dirs = [f for f in entries if os.path.isdir(f)]
+        files = [f for f in entries if not os.path.isdir(f)]
 
-                name = f"📁 {f}" if is_dir else f"📄 {f}"
-                name = CLS_check.colorize(name, "blue", None, "bold") if is_dir else CLS_check.colorize(name, "white", None)
+        def format_entry(f, is_dir):
+            path = os.path.join(os.getcwd(), f)
+            stat_info = os.stat(path)
+            icon = "📁" if is_dir else "📄"
+            name = f"{icon} {f}"
+            name = CLS_check.colorize(name, "blue", None, "bold") if is_dir else CLS_check.colorize(name, "white")
 
+            if show_long:
                 perms = stat.filemode(stat_info.st_mode)
                 size = stat_info.st_size
                 if human:
@@ -56,19 +60,18 @@ def ls_command(cmd):
                         size /= 1024
                     size = f"{size:.1f}{unit}"
                 mtime = time.strftime('%b %d %H:%M', time.localtime(stat_info.st_mtime))
-                print(f"{perms} {size:>6} {mtime} {name}")
-        else:
-            output = []
-            for f in files:
-                path = os.path.join(os.getcwd(), f)
-                is_dir = os.path.isdir(path)
-                name = f"📁 {f}" if is_dir else f"📄 {f}"
-                name = CLS_check.colorize(name, "blue", None, "bold") if is_dir else CLS_check.colorize(name, "white", None)
-                output.append(name)
-            print('\t'.join(output))
+                return f"{perms} {size:>6} {mtime} {name}"
+            else:
+                return name
+
+        for d in dirs:
+            print(format_entry(d, True))
+        for f in files:
+            print(format_entry(f, False))
 
     except Exception as e:
         print("Error:", e)
+
 
 #cd
 def cd_command(cmd):
@@ -90,3 +93,37 @@ def cd_command(cmd):
         print(f"🚫 Permission denied: {path}")
     except Exception as e:
         print(f"⚠️ Error: {e}")
+
+#mkdir
+def mkdir_command(cmd):
+    raw_args = cmd[len("mkdir"):].strip()
+    args = []
+    current = ''
+    in_quotes = False
+
+    for char in raw_args:
+        if char == '"':
+            in_quotes = not in_quotes
+            continue
+        if char == ' ' and not in_quotes:
+            if current:
+                args.append(current)
+                current = ''
+        else:
+            current += char
+
+    if current:
+        args.append(current)
+
+    if not args:
+        print("⚠️  mkdir: missing operand")
+        return
+
+    for folder in args:
+        try:
+            os.makedirs(folder, exist_ok=True)
+            print(f"📁 Created: {folder}")
+        except FileExistsError:
+            print(f"⚠️  mkdir: '{folder}' already exists")
+        except Exception as e:
+            print(f"⚠️  mkdir: error creating '{folder}': {e}")
