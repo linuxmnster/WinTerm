@@ -1,7 +1,7 @@
 import os
 import stat
 import time
-from CLS
+import CLS_check
 
 def home_path():
     try:
@@ -55,9 +55,9 @@ def ls_command(input_command):
 
                 # Colorize file names
                 if stat.S_ISDIR(stats.st_mode):  # Check if it's a directory
-                    file = colorize(file, "blue", None, None)  # Color directories blue
+                    file = CLS_check.colorize(file, "blue", None, None)  # Color directories blue
                 else:
-                    file = colorize(file, "green", None, None)  # Color regular files green
+                    file = CLS_check.colorize(file, "green", None, None)  # Color regular files green
 
                 print(f"{permissions} {size} {mtime} {file}")
             except Exception:
@@ -70,9 +70,9 @@ def ls_command(input_command):
             try:
                 stats = os.stat(file_path)
                 if stat.S_ISDIR(stats.st_mode):
-                    file = colorize(file, "blue", None, None)  # Color directories blue
+                    file = CLS_check.colorize(file, "blue", None, None)  # Color directories blue
                 else:
-                    file = colorize(file, "green", None, None)  # Color regular files green
+                    file = CLS_check.colorize(file, "green", None, None)  # Color regular files green
                 print(file)
             except Exception:
                 print(f"Error with file {file}")
