@@ -11,3 +11,10 @@ def home_path():
         except FileNotFoundError:
             path = os.path.expanduser("~")
             os.chdir(path)
+
+def clear_screen():
+    os.system("cls" if os.name == "nt" else "clear")
+
+def pwd():
+    print(os.getcwd())
+    
