@@ -1,12 +1,15 @@
 from CLI import CLS_check
 from CLI.CLS import home_path
 
+def color(text, code):
+    return f"\033[{code}m{text}\033[0m"
+
 def main():
     home_path()
 
     while True:
         try:
-            user_input = input("WinTerm> ").strip()
+            user_input = input(color("WinTerm", "32")+color("> ", "31")).strip()
 
             if not user_input:
                 continue
