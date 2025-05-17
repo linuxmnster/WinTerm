@@ -1,7 +1,10 @@
 import os
+import sys
 import stat
 import shutil
 import time
+import ctypes
+import keyboard
 from . import CLS_check
 
 def home_path():
@@ -16,6 +19,19 @@ def home_path():
             path = os.path.expanduser("~")
             os.chdir(path)
     return path
+
+#sudo
+def run_as_admin():
+    # Check if the script is already running as admin
+    if ctypes.windll.shell32.IsUserAnAdmin() != 0:
+        print("Running with admin privileges.")
+        return True
+    else:
+        print("Attempting to run as admin...")
+        # Relaunch the script with admin privileges
+        script = sys.argv[0]
+        ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, script, None, 1)
+        return False
 
 def clear_screen():
     os.system("cls" if os.name == "nt" else "clear")
@@ -133,7 +149,6 @@ def mkdir_command(cmd):
             
 #rmdir
 def rmdir_command(cmd):
-    # Step 1: Parse the command and arguments
     raw_args = cmd[len("rmdir"):].strip()
     args = []
     current = ''
@@ -160,35 +175,46 @@ def rmdir_command(cmd):
         force = True
         args.remove("-f")  # Remove the flag so only folder names remain
 
-    # Step 2: Handle no folder provided
+    # Handle no folder provided
     if not args:
         print("⚠️  rmdir: missing operand")
         return
 
-    # Step 3: Process each folder
     for folder in args:
         try:
-            # Check if the folder exists
             if not os.path.exists(folder):
                 print(f"Error: No such directory: '{folder}'")
                 continue
-            
-            # Step 4: Handle force flag for non-empty directories
+
             if force:
                 if os.path.isdir(folder):
-                    # Try to remove the directory forcefully
-                    shutil.rmtree(folder)  # Force delete non-empty directory
-                    print(f"📁 Deleted (force): {folder}")
+                    # Confirm before deleting non-empty directory
+                    print(f"Are you sure you want to delete the non-empty directory '{folder}'? Press 'y' to confirm.")
+                    while True:
+                        if keyboard.is_pressed('y'):  # Wait for 'y' key press
+                            shutil.rmtree(folder)  # Force delete non-empty directory
+                            print(f"📁 Deleted (force): {folder}")
+                            break
+                        elif keyboard.is_pressed('n'):  # Wait for 'n' key press
+                            print(f"❌ Deletion of '{folder}' aborted.")
+                            break
                 else:
                     print(f"Error: '{folder}' is not a directory")
             else:
-                # Remove the folder only if it's empty
+                # Check if directory is empty and confirm deletion
                 if os.path.isdir(folder) and not os.listdir(folder):  # Check if empty
-                    os.rmdir(folder)
-                    print(f"📁 Deleted: {folder}")
+                    print(f"Are you sure you want to delete the empty directory '{folder}'? Press 'y' to confirm.")
+                    while True:
+                        if keyboard.is_pressed('y'):  # Wait for 'y' key press
+                            os.rmdir(folder)
+                            print(f"📁 Deleted: {folder}")
+                            break
+                        elif keyboard.is_pressed('n'):  # Wait for 'n' key press
+                            print(f"❌ Deletion of '{folder}' aborted.")
+                            break
                 else:
                     print(f"Error: Directory '{folder}' is not empty. Use '-f' to force delete.")
-                    
+        
         except PermissionError:
             print(f"⚠️ Error: Permission denied: '{folder}'")
             # Retry logic: Attempt to delete again after a delay
