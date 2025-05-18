@@ -4,7 +4,6 @@ import stat
 import shutil
 import time
 import ctypes
-import keyboard
 from . import CLS_check
 
 def home_path():
@@ -148,83 +147,35 @@ def mkdir_command(cmd):
             print(f"⚠️  mkdir: error creating '{folder}': {e}")
             
 #rmdir
-def rmdir_command(cmd):
-    raw_args = cmd[len("rmdir"):].strip()
-    args = []
-    current = ''
-    in_quotes = False
-    force = False
+def rmdir_command(raw_input: str):
+    # Split the raw_input to get the command and its arguments
+    parts = raw_input.split()
 
-    # Parse each character to handle spaces and quotes correctly
-    for char in raw_args:
-        if char == '"':
-            in_quotes = not in_quotes
-            continue
-        if char == ' ' and not in_quotes:
-            if current:
-                args.append(current)
-                current = ''
-        else:
-            current += char
-
-    if current:
-        args.append(current)
-
-    # Check if the '-f' flag is in the arguments
-    if "-f" in args:
-        force = True
-        args.remove("-f")  # Remove the flag so only folder names remain
-
-    # Handle no folder provided
-    if not args:
+    if len(parts) == 1:
+        # No directory name provided, print "missing operand"
         print("⚠️  rmdir: missing operand")
         return
 
-    for folder in args:
-        try:
-            if not os.path.exists(folder):
-                print(f"Error: No such directory: '{folder}'")
-                continue
+    # Extract the flag (-f) and directory names
+    flag_or_dir = parts[1:]
 
-            if force:
-                if os.path.isdir(folder):
-                    # Confirm before deleting non-empty directory
-                    print(f"Are you sure you want to delete the non-empty directory '{folder}'? Press 'y' to confirm.")
-                    while True:
-                        if keyboard.is_pressed('y'):  # Wait for 'y' key press
-                            shutil.rmtree(folder)  # Force delete non-empty directory
-                            print(f"📁 Deleted (force): {folder}")
-                            break
-                        elif keyboard.is_pressed('n'):  # Wait for 'n' key press
-                            print(f"❌ Deletion of '{folder}' aborted.")
-                            break
-                else:
-                    print(f"Error: '{folder}' is not a directory")
-            else:
-                # Check if directory is empty and confirm deletion
-                if os.path.isdir(folder) and not os.listdir(folder):  # Check if empty
-                    print(f"Are you sure you want to delete the empty directory '{folder}'? Press 'y' to confirm.")
-                    while True:
-                        if keyboard.is_pressed('y'):  # Wait for 'y' key press
-                            os.rmdir(folder)
-                            print(f"📁 Deleted: {folder}")
-                            break
-                        elif keyboard.is_pressed('n'):  # Wait for 'n' key press
-                            print(f"❌ Deletion of '{folder}' aborted.")
-                            break
-                else:
-                    print(f"Error: Directory '{folder}' is not empty. Use '-f' to force delete.")
-        
-        except PermissionError:
-            print(f"⚠️ Error: Permission denied: '{folder}'")
-            # Retry logic: Attempt to delete again after a delay
-            print(f"Attempting to retry after a short delay...")
-            time.sleep(2)  # Wait for a brief moment before retrying
+    # If -f flag is present, attempt to force remove non-empty directories
+    force_flag = False
+    if "-f" in flag_or_dir:
+        force_flag = True
+        flag_or_dir.remove("-f")  # Remove the flag to only get directories
+
+    # Now handle directories
+    if flag_or_dir:
+        for directory in flag_or_dir:
             try:
-                shutil.rmtree(folder)  # Retry the deletion forcefully
-                print(f"📁 Deleted (force): {folder}")
-            except Exception as e:
-                print(f"⚠️ Error: Failed to delete folder after retry: {e}")
-                
-        except Exception as e:
-            print(f"⚠️ Error: {e}")
+                if force_flag:
+                    shutil.rmtree(directory)  # Force remove non-empty directory
+                    print(f"📁 Directory '{directory}' removed (force).")
+                else:
+                    os.rmdir(directory)  # Only remove empty directory
+                    print(f"📁 Directory '{directory}' removed.")
+            except OSError as e:
+                print(f"⚠️  Failed to remove '{directory}': {e}")
+    else:
+        print("⚠️  No directories specified for removal.")
