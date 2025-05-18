@@ -151,37 +151,43 @@ def mkdir_command(cmd):
             
 #rmdir
 def rmdir_command(raw_input: str):
-    # Split the raw_input to get the command and its arguments
-    parts = raw_input.split()
+    try:
+        # Use shlex.split to handle quoted paths like "new folder"
+        parts = shlex.split(raw_input)
 
-    if len(parts) == 1:
-        # No directory name provided, print "missing operand"
-        print("⚠️  rmdir: missing operand")
-        return
+        if len(parts) <= 1:
+            print("⚠️  rmdir: missing operand")
+            return
 
-    # Extract the flag (-f) and directory names
-    flag_or_dir = parts[1:]
+        # First part is 'rmdir', rest are flags or directory names
+        args = parts[1:]
 
-    # If -f flag is present, attempt to force remove non-empty directories
-    force_flag = False
-    if "-f" in flag_or_dir:
-        force_flag = True
-        flag_or_dir.remove("-f")  # Remove the flag to only get directories
+        force_flag = False
+        directories = []
 
-    # Now handle directories
-    if flag_or_dir:
-        for directory in flag_or_dir:
+        for arg in args:
+            if arg == "-f":
+                force_flag = True
+            else:
+                directories.append(arg)
+
+        if not directories:
+            print("⚠️  No directories specified for removal.")
+            return
+
+        for directory in directories:
             try:
                 if force_flag:
-                    shutil.rmtree(directory)  # Force remove non-empty directory
+                    shutil.rmtree(directory)
                     print(f"📁 Directory '{directory}' removed (force).")
                 else:
-                    os.rmdir(directory)  # Only remove empty directory
+                    os.rmdir(directory)
                     print(f"📁 Directory '{directory}' removed.")
             except OSError as e:
                 print(f"⚠️  Failed to remove '{directory}': {e}")
-    else:
-        print("⚠️  No directories specified for removal.")
+
+    except ValueError as e:
+        print(f"⚠️  Error parsing input: {e}")
 
 #touch
 def touch_command(raw_input):
