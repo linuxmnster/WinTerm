@@ -92,6 +92,8 @@ def check_command(raw_input: str):
     elif base.startswith("touch"):
         CLS.touch_command(raw_input)
 
+    elif base.startswith("cat"):
+        CLS.cat_command(raw_input)
 
     else:
         print(f"⚠️  Unknown command: {command}")

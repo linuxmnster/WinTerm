@@ -224,3 +224,88 @@ def touch_command(raw_input):
                     path.touch()
         except Exception as e:
             print(f"⚠️  Error creating/updating file '{file}': {e}")
+
+#cat
+def cat_command(raw_input: str):
+    import re
+
+    args = raw_input.strip().split()
+    flags = {
+        "-n": False,
+        "-b": False,
+        "-E": False,
+        "-s": False,
+        "-T": False,
+        "-A": False
+    }
+
+    files = []
+
+    # Extract flags and files (handles quotes too)
+    joined = raw_input[len("cat"):].strip()
+    tokens = re.findall(r'"[^"]*"|\S+', joined)
+
+    for token in tokens:
+        if token in flags:
+            flags[token] = True
+            if token == "-A":
+                flags["-E"] = True
+                flags["-T"] = True
+        else:
+            files.append(token.strip('"'))
+
+    if not files:
+        print("⚠️  cat: missing operand")
+        return
+
+    for filename in files:
+        if not os.path.exists(filename):
+            print(f"⚠️  cat: {filename}: No such file or directory")
+            continue
+        if os.path.isdir(filename):
+            print(f"⚠️  cat: {filename}: Is a directory")
+            continue
+
+        try:
+            with open(filename, "r", encoding="utf-8") as f:
+                lines = f.readlines()
+
+            output_lines = []
+            previous_blank = False
+            line_number = 1
+
+            for line in lines:
+                show_line = line.rstrip("\n")
+
+                # -s (suppress multiple empty lines)
+                if flags["-s"]:
+                    if show_line.strip() == "":
+                        if previous_blank:
+                            continue
+                        previous_blank = True
+                    else:
+                        previous_blank = False
+
+                prefix = ""
+                # -b or -n (numbering)
+                if flags["-b"] and show_line.strip() != "":
+                    prefix = f"{line_number:6}\t"
+                    line_number += 1
+                elif flags["-n"]:
+                    prefix = f"{line_number:6}\t"
+                    line_number += 1
+
+                # -T (show tabs)
+                if flags["-T"]:
+                    show_line = show_line.replace("\t", "^I")
+
+                # -E (show end-of-line $)
+                if flags["-E"]:
+                    show_line += "$"
+
+                output_lines.append(f"{prefix}{show_line}")
+
+            print("\n".join(output_lines))
+
+        except Exception as e:
+            print(f"⚠️  cat: {filename}: {e}")
