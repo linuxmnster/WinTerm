@@ -4,6 +4,9 @@ import stat
 import shutil
 import time
 import ctypes
+import shlex
+from pathlib import Path
+from datetime import datetime
 from . import CLS_check
 
 def home_path():
@@ -179,3 +182,45 @@ def rmdir_command(raw_input: str):
                 print(f"⚠️  Failed to remove '{directory}': {e}")
     else:
         print("⚠️  No directories specified for removal.")
+
+#touch
+def touch_command(raw_input):
+    args = shlex.split(raw_input)  # Handles quotes properly
+
+    if len(args) == 1:
+        print("⚠️  touch: missing file operand")
+        return
+
+    flags = []
+    filenames = []
+
+    # Start from 1 to skip the 'touch' part
+    for arg in args[1:]:
+        if arg.startswith('-'):
+            flags.append(arg)
+        else:
+            filenames.append(arg)
+
+    # Parse flags
+    no_create = '-c' in flags
+    change_access = '-a' in flags
+    change_mod = '-m' in flags
+    use_current_time = not change_access and not change_mod  # default behavior
+
+    current_time = datetime.now().timestamp()
+
+    for file in filenames:
+        path = Path(file)
+        try:
+            if path.exists():
+                times = (
+                    current_time if change_access or use_current_time else path.stat().st_atime,
+                    current_time if change_mod or use_current_time else path.stat().st_mtime,
+                )
+                os.utime(path, times)
+            else:
+                if not no_create:
+                    path.parent.mkdir(parents=True, exist_ok=True)
+                    path.touch()
+        except Exception as e:
+            print(f"⚠️  Error creating/updating file '{file}': {e}")

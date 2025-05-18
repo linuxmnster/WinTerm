@@ -89,5 +89,9 @@ def check_command(raw_input: str):
     elif base.startswith("rmdir"):
         CLS.rmdir_command(raw_input)
 
+    elif base.startswith("touch"):
+        CLS.touch_command(raw_input)
+
+
     else:
         print(f"⚠️  Unknown command: {command}")
