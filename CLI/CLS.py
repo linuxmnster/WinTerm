@@ -1,4 +1,4 @@
-import os, sys, shutil, shlex
+import os, sys, shutil, shlex, fileinput
 import stat
 import time
 import ctypes
@@ -246,85 +246,126 @@ def touch_command(raw_input):
 
 
 #cat
-def cat_command(raw_input: str):
-    import re
-
-    flags = {
-        "-n": False,
-        "-b": False,
-        "-E": False,
-        "-s": False,
-        "-T": False,
-        "-A": False
-    }
-
-    files = []
-
-    # Extract flags and files (handles quotes too)
-    joined = raw_input[len("cat"):].strip()
-    tokens = re.findall(r'"[^"]*"|\S+', joined)
-
-    for token in tokens:
-        if token in flags:
-            flags[token] = True
-            if token == "-A":
-                flags["-E"] = True
-                flags["-T"] = True
-        else:
-            files.append(token.strip('"'))
-
-    if not files:
+def cat_command(raw_input):
+    args = shlex.split(raw_input)
+    if len(args) == 1:
         print("⚠️  cat: missing operand")
         return
 
-    for filename in files:
-        if not os.path.exists(filename):
-            print(f"⚠️  cat: {filename}: No such file or directory")
-            continue
-        if os.path.isdir(filename):
-            print(f"⚠️  cat: {filename}: Is a directory")
+    args = args[1:]  # remove 'cat'
+
+    # Redirection (cat > file.txt / >> file.txt / copy files)
+    if ">" in args or ">>" in args:
+        op = ">>" if ">>" in args else ">"
+        op_idx = args.index(op)
+        sources = args[:op_idx]
+        dest = args[op_idx + 1] if op_idx + 1 < len(args) else None
+
+        if not dest:
+            print("⚠️  cat: missing destination file")
+            return
+
+        try:
+            mode = "a" if op == ">>" else "w"
+            if not sources:
+                # cat > file.txt or >> file.txt — interactive write
+                print(f"✍️  Enter content for '{dest}' (Press Ctrl+Z then Enter to save, Ctrl+C to cancel):")
+                try:
+                    with open(dest, mode, encoding="utf-8") as f:
+                        while True:
+                            try:
+                                line = input()
+                                f.write(line + "\n")
+                            except EOFError:
+                                break
+                    print(f"✅ {'Appended' if mode == 'a' else 'Saved'} to '{dest}'")
+                except KeyboardInterrupt:
+                    print("\n❌ Aborted.")
+                except Exception as e:
+                    print(f"❌ Error: {e}")
+            else:
+                with open(dest, mode, encoding="utf-8") as f_out:
+                    for src in sources:
+                        if os.path.isfile(src):
+                            with open(src, "r", encoding="utf-8", errors="replace") as f:
+                                f_out.write(f.read())
+                        else:
+                            print(f"⚠️  cat: {src}: No such file or not a file")
+                print(f"✅ {'Appended' if mode == 'a' else 'Copied'} to '{dest}'")
+        except Exception as e:
+            print(f"❌ Error: {e}")
+        return
+
+    # Flag parsing
+    flags = {
+        "-A": False, "-b": False, "-E": False,
+        "-n": False, "-s": False, "-T": False, "-v": False, "-e": False
+    }
+    files = []
+
+    for arg in args:
+        if arg.startswith("-"):
+            for char in arg[1:]:
+                key = f"-{char}"
+                if key in flags:
+                    flags[key] = True
+                    if key == "-A":
+                        flags["-v"] = flags["-E"] = flags["-T"] = True
+                    if key == "-e":
+                        flags["-v"] = True
+                        flags["-E"] = True
+                else:
+                    print(f"⚠️  cat: unknown flag: -{char}")
+        else:
+            files.append(arg)
+
+    for file in files:
+        if not os.path.isfile(file):
+            print(f"⚠️  cat: {file}: No such file or not a file")
             continue
 
         try:
-            with open(filename, "r", encoding="utf-8") as f:
+            with open(file, "r", encoding="utf-8", errors="replace") as f:
                 lines = f.readlines()
 
-            output_lines = []
-            previous_blank = False
             line_number = 1
+            previous_blank = False
+            output = []
 
             for line in lines:
-                show_line = line.rstrip("\n")
+                raw = line.rstrip("\n")
 
-                # -s (suppress multiple empty lines)
-                if flags["-s"]:
-                    if show_line.strip() == "":
-                        if previous_blank:
-                            continue
-                        previous_blank = True
-                    else:
-                        previous_blank = False
+                if flags["-s"] and raw.strip() == "":
+                    if previous_blank:
+                        continue
+                    previous_blank = True
+                else:
+                    previous_blank = False
+
+                if flags["-v"]:
+                    raw = ''.join(
+                        c if 32 <= ord(c) <= 126 or c == '\t'
+                        else f"^{chr(ord(c) + 64)}" for c in raw
+                    )
+
+                if flags["-T"]:
+                    raw = raw.replace("\t", "^I")
+
+                if flags["-E"]:
+                    raw += "$"
 
                 prefix = ""
-                # -b or -n (numbering)
-                if flags["-b"] and show_line.strip() != "":
+                if flags["-b"] and raw.strip():
                     prefix = f"{line_number:6}\t"
                     line_number += 1
                 elif flags["-n"]:
                     prefix = f"{line_number:6}\t"
                     line_number += 1
 
-                # -T (show tabs)
-                if flags["-T"]:
-                    show_line = show_line.replace("\t", "^I")
+                output.append(prefix + raw)
 
-                # -E (show end-of-line $)
-                if flags["-E"]:
-                    show_line += "$"
-
-                output_lines.append(f"{prefix}{show_line}")
-
-            print("\n".join(output_lines))
+            print("\n".join(output))
 
         except Exception as e:
-            print(f"⚠️  cat: {filename}: {e}")
+            print(f"⚠️  cat: {file}: {e}")
+

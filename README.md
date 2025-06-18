@@ -1,3 +1,3 @@
-# WinTerm
-a windows tool that helps performing linux level operations
-<br>
+#WinTerm
+<hr>
+A Windows Tool That can perform LINUX level operations
