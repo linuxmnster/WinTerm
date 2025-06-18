@@ -1,5 +1,3 @@
-import stat
-import time
 from . import CLS
 
 #color function

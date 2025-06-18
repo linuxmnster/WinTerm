@@ -1,10 +1,7 @@
-import os
-import sys
+import os, sys, shutil, shlex
 import stat
-import shutil
 import time
 import ctypes
-import shlex
 from pathlib import Path
 from datetime import datetime
 from . import CLS_check
@@ -191,51 +188,67 @@ def rmdir_command(raw_input: str):
 
 #touch
 def touch_command(raw_input):
-    args = shlex.split(raw_input)  # Handles quotes properly
-
-    if len(args) == 1:
+    args = shlex.split(raw_input)[1:]
+    if not args:
         print("⚠️  touch: missing file operand")
         return
 
-    flags = []
-    filenames = []
+    atime, mtime = None, None
+    no_create = False
+    files = []
+    i = 0
 
-    # Start from 1 to skip the 'touch' part
-    for arg in args[1:]:
-        if arg.startswith('-'):
-            flags.append(arg)
+    while i < len(args):
+        arg = args[i]
+        if arg in ("-a",): atime = "now"
+        elif arg in ("-m",): mtime = "now"
+        elif arg in ("-c", "--no-create"): no_create = True
+        elif arg in ("-f", "-h", "--no-dereference"): pass
+        elif arg.startswith(("-d=", "--date=")):
+            try:
+                ts = datetime.fromisoformat(arg.split("=", 1)[1]).timestamp()
+                atime = mtime = ts
+            except: print(f"⚠️  Invalid date: {arg}"); return
+        elif arg == "-t":
+            i += 1
+            try:
+                fmt = "%Y%m%d%H%M.%S" if '.' in args[i] else "%Y%m%d%H%M"
+                ts = time.mktime(time.strptime(args[i], fmt))
+                atime = mtime = ts
+            except: print(f"⚠️  Invalid -t timestamp: {args[i]}"); return
+        elif arg.startswith(("-r=", "--reference=")):
+            ref = arg.split("=", 1)[1]
+            try:
+                s = os.stat(ref)
+                atime, mtime = s.st_atime, s.st_mtime
+            except: print(f"⚠️  Reference file not found: {ref}"); return
+        elif arg.startswith("-"):
+            print(f"⚠️  Unknown flag: {arg}")
         else:
-            filenames.append(arg)
+            files.append(arg)
+        i += 1
 
-    # Parse flags
-    no_create = '-c' in flags
-    change_access = '-a' in flags
-    change_mod = '-m' in flags
-    use_current_time = not change_access and not change_mod  # default behavior
+    now = time.time()
+    atime = now if atime in ("now", None) else atime
+    mtime = now if mtime in ("now", None) else mtime
 
-    current_time = datetime.now().timestamp()
-
-    for file in filenames:
-        path = Path(file)
+    for f in files:
+        path = Path(f)
         try:
             if path.exists():
-                times = (
-                    current_time if change_access or use_current_time else path.stat().st_atime,
-                    current_time if change_mod or use_current_time else path.stat().st_mtime,
-                )
-                os.utime(path, times)
-            else:
-                if not no_create:
-                    path.parent.mkdir(parents=True, exist_ok=True)
-                    path.touch()
+                os.utime(path, (atime, mtime))
+            elif not no_create:
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.touch()
+                os.utime(path, (atime, mtime))
         except Exception as e:
-            print(f"⚠️  Error creating/updating file '{file}': {e}")
+            print(f"⚠️  touch: {f}: {e}")
+
 
 #cat
 def cat_command(raw_input: str):
     import re
 
-    args = raw_input.strip().split()
     flags = {
         "-n": False,
         "-b": False,
