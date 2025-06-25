@@ -1,4 +1,4 @@
-import os, sys, shutil, shlex, fileinput
+import os, sys, shutil, shlex, glob
 import stat
 import time
 import ctypes
@@ -369,3 +369,78 @@ def cat_command(raw_input):
         except Exception as e:
             print(f"⚠️  cat: {file}: {e}")
 
+#rm
+def rm_command(raw_input):
+    args = shlex.split(raw_input)[1:]  # remove 'rm'
+
+    flags = {
+        "-f": False, "-i": False, "-I": False,
+        "-r": False, "-d": False, "-v": False
+    }
+
+    targets = []
+
+    # Parse flags and expand wildcards
+    for arg in args:
+        if arg.startswith("-"):
+            for char in arg[1:]:
+                key = f"-{char}"
+                if key in flags:
+                    flags[key] = True
+                else:
+                    print(f"⚠️  rm: unknown option -- {char}")
+        else:
+            matches = glob.glob(arg)
+            if matches:
+                targets.extend(matches)
+            else:
+                targets.append(arg)
+
+    if not targets:
+        print("⚠️  rm: missing operand")
+        return
+
+    # -I prompt (once for 3+ or recursive)
+    if flags["-I"] and (len(targets) > 3 or flags["-r"]):
+        confirm = input(f"rm: remove {len(targets)} items? [y/N]: ")
+        if confirm.lower() != 'y':
+            print("❌ Aborted.")
+            return
+
+    for path in targets:
+        if not os.path.exists(path):
+            if not flags["-f"]:
+                print(f"⚠️  rm: cannot remove '{path}': No such file or directory")
+            continue
+
+        is_dir = os.path.isdir(path)
+
+        # -i: ask before every removal
+        if flags["-i"]:
+            confirm = input(f"rm: remove {'directory' if is_dir else 'file'} '{path}'? [y/N]: ")
+            if confirm.lower() != 'y':
+                print("❌ Skipped.")
+                continue
+
+        try:
+            if is_dir:
+                if flags["-d"]:
+                    if not os.listdir(path):
+                        os.rmdir(path)
+                        if flags["-v"]:
+                            print(f"✔️ removed empty directory '{path}'")
+                    elif not flags["-f"]:
+                        print(f"⚠️  rm: cannot remove '{path}': Directory not empty")
+                elif flags["-r"]:
+                    shutil.rmtree(path)
+                    if flags["-v"]:
+                        print(f"✔️ recursively removed directory '{path}'")
+                else:
+                    print(f"⚠️  rm: cannot remove '{path}': Is a directory")
+            else:
+                os.remove(path)
+                if flags["-v"]:
+                    print(f"✔️ removed file '{path}'")
+        except Exception as e:
+            if not flags["-f"]:
+                print(f"❌ rm: failed to remove '{path}': {e}")
