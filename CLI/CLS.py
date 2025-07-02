@@ -696,3 +696,35 @@ def tail_command(raw_input):
                 print("".join(lines[-count:]), end="")
         except Exception as e:
             print(f"❌ tail: {file}: {e}")
+
+#tree
+def tree_command(raw_input):
+    import os, shlex
+    from pathlib import Path
+
+    args = shlex.split(raw_input)
+    path = Path(args[1]) if len(args) > 1 else Path(".")
+
+    if not path.exists() or not path.is_dir():
+        print(f"❌ tree: '{path}' is not a valid directory")
+        return
+
+    dir_count = file_count = 0
+
+    def walk(dir_path: Path, prefix=""):
+        nonlocal dir_count, file_count
+        entries = sorted(list(dir_path.iterdir()))
+        for idx, entry in enumerate(entries):
+            connector = "└── " if idx == len(entries) - 1 else "├── "
+            print(prefix + connector + entry.name)
+
+            if entry.is_dir():
+                dir_count += 1
+                extension = "    " if idx == len(entries) - 1 else "│   "
+                walk(entry, prefix + extension)
+            else:
+                file_count += 1
+
+    print(f"{path.resolve().name}/")
+    walk(path.resolve())
+    print(f"\n📁 {dir_count} directories, 📄 {file_count} files")
