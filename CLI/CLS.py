@@ -665,3 +665,34 @@ def head_command(raw_input):
                 print("".join(lines[:count]), end="")
         except Exception as e:
             print(f"❌ head: {file}: {e}")
+
+#tail
+def tail_command(raw_input):
+    import shlex
+    args = shlex.split(raw_input)[1:]  # remove 'tail'
+
+    count = 10
+    files = []
+
+    i = 0
+    while i < len(args):
+        arg = args[i]
+        if arg in ("-n", "--lines"):
+            i += 1
+            count = int(args[i])
+        else:
+            files.append(arg)
+        i += 1
+
+    if not files:
+        print("⚠️  tail: missing file operand")
+        return
+
+    for file in files:
+        try:
+            with open(file, "r", encoding="utf-8", errors="replace") as f:
+                lines = f.readlines()
+                print(f"\n==> {file} <==" if len(files) > 1 else "")
+                print("".join(lines[-count:]), end="")
+        except Exception as e:
+            print(f"❌ tail: {file}: {e}")
