@@ -444,3 +444,101 @@ def rm_command(raw_input):
         except Exception as e:
             if not flags["-f"]:
                 print(f"❌ rm: failed to remove '{path}': {e}")
+
+#cp
+def cp_command(raw_input):
+    import os, shutil, shlex
+    from pathlib import Path
+
+    args = shlex.split(raw_input)[1:]
+    flags = {
+        "archive": False, "backup": False, "force": False,
+        "interactive": False, "link": False, "no_clobber": False,
+        "recursive": False, "suffix": "~", "target_dir": None
+    }
+
+    sources = []
+    i = 0
+    while i < len(args):
+        arg = args[i]
+        if arg in ("-a", "--archive"): flags["archive"] = flags["recursive"] = True
+        elif arg in ("-b", "--backup"): flags["backup"] = True
+        elif arg in ("-f", "--force"): flags["force"] = True
+        elif arg in ("-i", "--interactive"): flags["interactive"] = True
+        elif arg in ("-l", "--link"): flags["link"] = True
+        elif arg in ("-n", "--no-clobber"): flags["no_clobber"] = True
+        elif arg in ("-r", "-R", "--recursive"): flags["recursive"] = True
+        elif arg.startswith("--suffix="): flags["suffix"] = arg.split("=", 1)[1]
+        elif arg == "-S": i += 1; flags["suffix"] = args[i]
+        elif arg.startswith("--target-directory="): flags["target_dir"] = arg.split("=", 1)[1]
+        elif arg == "-t": i += 1; flags["target_dir"] = args[i]
+        else: sources.append(arg)
+        i += 1
+
+    if not sources:
+        print("⚠️  cp: missing file operand")
+        return
+
+    def copy(src_path: Path, dest_path: Path):
+        if not src_path.exists():
+            print(f"⚠️  cp: cannot stat '{src_path}': No such file or directory")
+            return
+
+        dest_exists = dest_path.exists()
+
+        # Overwrite protection logic
+        if dest_exists:
+            if flags["no_clobber"]:
+                print(f"ℹ️  cp: not overwriting '{dest_path}' (no-clobber)")
+                return
+            if flags["interactive"]:
+                ans = input(f"cp: overwrite '{dest_path}'? [y/N]: ")
+                if ans.lower() != "y":
+                    print("❌ Skipped.")
+                    return
+            if flags["backup"]:
+                backup_path = dest_path.with_name(dest_path.name + flags["suffix"])
+                shutil.copy2(dest_path, backup_path)
+                print(f"🔁 Backup created: {backup_path}")
+
+        try:
+            if flags["link"]:
+                os.link(src_path, dest_path)
+            elif src_path.is_dir():
+                if not flags["recursive"]:
+                    print(f"⚠️  cp: omitting directory '{src_path}' (use -r)")
+                    return
+                shutil.copytree(
+                    src_path, dest_path,
+                    copy_function=shutil.copy2 if flags["archive"] else shutil.copy,
+                    dirs_exist_ok=flags["force"]
+                )
+            else:
+                shutil.copy2(src_path, dest_path) if flags["archive"] else shutil.copy(src_path, dest_path)
+            print(f"✅ Copied '{src_path}' → '{dest_path}'")
+        except Exception as e:
+            print(f"❌ cp: failed to copy '{src_path}' → '{dest_path}': {e}")
+
+    # Handle target directory flag
+    if flags["target_dir"]:
+        target_dir = Path(flags["target_dir"])
+        if not target_dir.is_dir():
+            print(f"⚠️  cp: target directory '{target_dir}' does not exist or is not a directory")
+            return
+        for src in sources:
+            src_path = Path(src)
+            copy(src_path, target_dir / src_path.name)
+        return
+
+    # Normal copy logic
+    *src_list, dest_arg = sources
+    dest = Path(dest_arg)
+
+    if len(src_list) > 1 and not dest.is_dir():
+        print("⚠️  cp: when copying multiple files, destination must be a directory")
+        return
+
+    for src in src_list:
+        src_path = Path(src)
+        dest_path = dest / src_path.name if dest.is_dir() else dest
+        copy(src_path, dest_path)
