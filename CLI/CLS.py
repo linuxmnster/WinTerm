@@ -542,3 +542,95 @@ def cp_command(raw_input):
         src_path = Path(src)
         dest_path = dest / src_path.name if dest.is_dir() else dest
         copy(src_path, dest_path)
+
+#mv
+def mv_command(raw_input):
+    import os, shutil, shlex
+    from pathlib import Path
+
+    args = shlex.split(raw_input)[1:]  # remove 'mv'
+
+    flags = {
+        "force": False, "interactive": False, "no_clobber": False,
+        "verbose": False, "backup": False, "suffix": "~", "target_dir": None
+    }
+
+    sources = []
+    i = 0
+    while i < len(args):
+        arg = args[i]
+        if arg in ("-f", "--force"): flags["force"] = True
+        elif arg in ("-i", "--interactive"): flags["interactive"] = True
+        elif arg in ("-n", "--no-clobber"): flags["no_clobber"] = True
+        elif arg in ("-v", "--verbose"): flags["verbose"] = True
+        elif arg in ("-b", "--backup"): flags["backup"] = True
+        elif arg.startswith("--suffix="): flags["suffix"] = arg.split("=", 1)[1]
+        elif arg.startswith("--target-directory="): flags["target_dir"] = arg.split("=", 1)[1]
+        elif arg == "-t": i += 1; flags["target_dir"] = args[i]
+        elif arg == "--": i += 1; break
+        else: sources.append(arg)
+        i += 1
+
+    sources += args[i:]
+
+    if not sources:
+        print("⚠️  mv: missing file operand")
+        return
+
+    def move(src_str, dest_str):
+        src = Path(src_str).resolve()
+        dest = Path(dest_str).resolve()
+        if not src.exists():
+            print(f"⚠️  mv: cannot stat '{src}': No such file or directory")
+            return
+
+        if dest.exists():
+            if flags["no_clobber"]:
+                if flags["verbose"]:
+                    print(f"ℹ️  mv: not overwriting '{dest}' (no-clobber)")
+                return
+            if flags["interactive"]:
+                ans = input(f"mv: overwrite '{dest}'? [y/N]: ")
+                if ans.lower() != "y":
+                    print("❌ Skipped.")
+                    return
+            if flags["backup"]:
+                backup = dest.with_name(dest.name + flags["suffix"])
+                try:
+                    shutil.copy2(dest, backup)
+                    if flags["verbose"]:
+                        print(f"🔁 Backup: '{backup}'")
+                except Exception as e:
+                    print(f"❌ mv: backup failed: {e}")
+                    return
+
+        try:
+            shutil.move(str(src), str(dest))
+            if flags["verbose"]:
+                print(f"✅ Moved '{src}' → '{dest}'")
+        except Exception as e:
+            print(f"❌ mv: failed to move '{src}' → '{dest}': {e}")
+
+    # Handle -t/--target-directory
+    if flags["target_dir"]:
+        target_dir = Path(flags["target_dir"]).resolve()
+        if not target_dir.is_dir():
+            print(f"⚠️  mv: target directory '{target_dir}' does not exist")
+            return
+        for src in sources:
+            src_path = Path(src).resolve()
+            move(src_path, target_dir / src_path.name)
+        return
+
+    # Normal move (last is destination)
+    *src_list, dest_arg = sources
+    dest = Path(dest_arg).resolve()
+
+    if len(src_list) > 1 and not dest.is_dir():
+        print("⚠️  mv: target must be a directory when moving multiple files")
+        return
+
+    for src in src_list:
+        src_path = Path(src).resolve()
+        dest_path = dest / src_path.name if dest.is_dir() else dest
+        move(src_path, dest_path)
