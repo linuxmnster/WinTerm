@@ -1,4 +1,4 @@
-import os, sys, shutil, shlex, glob, subprocess
+import os, sys, shutil, shlex, glob, threading
 import stat
 import time
 import ctypes
@@ -24,10 +24,8 @@ def sudo_command():
     python = shutil.which("python")
     script = os.path.abspath(sys.argv[0])
     args = ' '.join([f'"{arg}"' for arg in sys.argv[1:]])
-    full_command = f'"{python}" "{script}" {args}'
 
     try:
-        # Launch a new elevated Python terminal directly
         ctypes.windll.shell32.ShellExecuteW(
             None, "runas", python, f'"{script}" {args}', None, 1
         )
@@ -994,3 +992,137 @@ def head_command(raw_input):
         except Exception as e:
             print(f"❌ head: {file}: {e}")
 
+#tail
+def tail_command(raw_input):
+    args = shlex.split(raw_input)[1:]
+    files = []
+    options = {
+        "lines": 10,
+        "bytes": None,
+        "lines_from": None,
+        "bytes_from": None,
+        "follow": None,
+        "retry": False,
+        "pid": None,
+        "sleep": 1,
+        "verbose": False,
+        "quiet": False,
+        "zero": False,
+        "max_unchanged_stats": 5
+    }
+
+    i = 0
+    while i < len(args):
+        arg = args[i]
+        if arg in ("-n", "--lines"):
+            i += 1
+            val = args[i]
+            options["lines_from"] = int(val[1:]) if val.startswith("+") else None
+            options["lines"] = int(val.lstrip("+"))
+        elif arg in ("-c", "--bytes"):
+            i += 1
+            val = args[i]
+            options["bytes_from"] = int(val[1:]) if val.startswith("+") else None
+            options["bytes"] = int(val.lstrip("+"))
+        elif arg.startswith("--pid="):
+            options["pid"] = int(arg.split("=", 1)[1])
+        elif arg.startswith("--max-unchanged-stats="):
+            options["max_unchanged_stats"] = int(arg.split("=", 1)[1])
+        elif arg.startswith("--sleep-interval=") or arg == "-s":
+            if "=" in arg:
+                options["sleep"] = float(arg.split("=", 1)[1])
+            else:
+                i += 1
+                options["sleep"] = float(args[i])
+        elif arg.startswith("--follow="):
+            options["follow"] = arg.split("=", 1)[1]
+        elif arg in ("-f", "--follow"):
+            options["follow"] = "descriptor"
+        elif arg == "-F":
+            options["follow"] = "name"
+            options["retry"] = True
+        elif arg in ("-q", "--quiet", "--silent"):
+            options["quiet"] = True
+        elif arg in ("-v", "--verbose"):
+            options["verbose"] = True
+        elif arg in ("-z", "--zero-terminated"):
+            options["zero"] = True
+        else:
+            files.append(arg)
+        i += 1
+
+    def is_pid_alive(pid):
+        try:
+            os.kill(pid, 0)
+            return True
+        except:
+            return False
+
+    def read_tail(file, print_header=True):
+        sep = '\0' if options["zero"] else '\n'
+        try:
+            with open(file, "rb") as f:
+                content = f.read()
+                if options["bytes"] is not None:
+                    if options["bytes_from"] is not None:
+                        out = content[options["bytes_from"] - 1:]
+                    else:
+                        out = content[-options["bytes"]:]
+                    print(out.decode("utf-8", errors="replace"), end="")
+                else:
+                    lines = content.decode("utf-8", errors="replace").splitlines()
+                    if options["lines_from"] is not None:
+                        out = lines[options["lines_from"] - 1:]
+                    else:
+                        out = lines[-options["lines"]:]
+                    print(sep.join(out), end=sep if out else "")
+        except Exception as e:
+            print(f"❌ tail: cannot read '{file}': {e}")
+
+    def follow_file(file):
+        unchanged_count = 0
+        prev_size = -1
+        while True:
+            if options["pid"] and not is_pid_alive(options["pid"]):
+                break
+            try:
+                curr_size = os.path.getsize(file)
+                if curr_size > prev_size:
+                    with open(file, "rb") as f:
+                        f.seek(prev_size if prev_size > 0 else 0)
+                        data = f.read()
+                        print(data.decode("utf-8", errors="replace"), end="")
+                    prev_size = curr_size
+                    unchanged_count = 0
+                else:
+                    unchanged_count += 1
+                if unchanged_count >= options["max_unchanged_stats"]:
+                    if options["retry"] and not os.path.exists(file):
+                        print(f"\n🔁 Retrying {file}...")
+                        while not os.path.exists(file):
+                            time.sleep(options["sleep"])
+                        prev_size = 0
+                    unchanged_count = 0
+                time.sleep(options["sleep"])
+            except KeyboardInterrupt:
+                break
+            except Exception:
+                time.sleep(options["sleep"])
+
+    if not files:
+        print("⚠️  tail: missing file operand")
+        return
+
+    for idx, file in enumerate(files):
+        if not os.path.exists(file):
+            print(f"❌ tail: {file}: No such file")
+            continue
+        if not options["quiet"] and (options["verbose"] or len(files) > 1):
+            print(f"==> {file} <==")
+
+        read_tail(file)
+
+        if options["follow"]:
+            t = threading.Thread(target=follow_file, args=(file,), daemon=True)
+            t.start()
+            t.join()
