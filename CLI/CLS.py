@@ -728,3 +728,99 @@ def tree_command(raw_input):
     print(f"{path.resolve().name}/")
     walk(path.resolve())
     print(f"\n📁 {dir_count} directories, 📄 {file_count} files")
+
+#locate
+def locate_command(raw_input):
+    import os, shlex, re
+    from pathlib import Path
+
+    args = shlex.split(raw_input)[1:]  # remove 'locate'
+
+    # Flags
+    flags = {
+        "null": False, "all": False, "basename": False,
+        "count": False, "existing": False, "ignore_case": False,
+        "limit": None, "ignore_spaces": False, "quiet": False,
+        "statistics": False, "transliterate": False,
+        "database": None, "patterns": []
+    }
+
+    i = 0
+    while i < len(args):
+        arg = args[i]
+        if arg in ("-0", "--null"): flags["null"] = True
+        elif arg in ("-A", "--all"): flags["all"] = True
+        elif arg in ("-b", "--basename"): flags["basename"] = True
+        elif arg in ("-c", "--count"): flags["count"] = True
+        elif arg in ("-e", "--existing"): flags["existing"] = True
+        elif arg in ("-i", "--ignore-case"): flags["ignore_case"] = True
+        elif arg in ("-l", "--limit", "-n"): i += 1; flags["limit"] = int(args[i])
+        elif arg in ("-p", "--ignore-spaces"): flags["ignore_spaces"] = True
+        elif arg in ("-q", "--quiet"): flags["quiet"] = True
+        elif arg in ("-S", "--statistics"): flags["statistics"] = True
+        elif arg in ("-t", "--transliterate"): flags["transliterate"] = True
+        elif arg in ("-w", "--wholename"): flags["basename"] = False
+        elif arg in ("-d", "--database"): i += 1; flags["database"] = args[i]
+        else: flags["patterns"].append(arg)
+        i += 1
+
+    def load_db():
+        entries = []
+        if flags["database"]:
+            for path in flags["database"].split(":"):
+                try:
+                    with open(path.strip(), "r", encoding="utf-8", errors="ignore") as f:
+                        entries.extend(line.strip() for line in f if line.strip())
+                except Exception as e:
+                    if not flags["quiet"]:
+                        print(f"⚠️  locate: cannot read database '{path}': {e}")
+        else:
+            for root, _, files in os.walk("."):
+                for f in files:
+                    entries.append(os.path.join(root, f))
+        return entries
+
+    def normalize(text):
+        if flags["transliterate"]:
+            trans = str.maketrans("áéíóúÁÉÍÓÚ", "aeiouAEIOU")
+            text = text.translate(trans)
+        if flags["ignore_spaces"]:
+            text = re.sub(r'[\s\W_]+', '', text)
+        return text
+
+    def is_match(path, patterns):
+        target = os.path.basename(path) if flags["basename"] else path
+        target = normalize(target)
+
+        if flags["ignore_case"]:
+            matches = [(normalize(p).lower() in target.lower()) for p in patterns]
+        else:
+            matches = [(normalize(p) in target) for p in patterns]
+
+        return all(matches) if flags["all"] else any(matches)
+
+    try:
+        db = load_db()
+
+        if flags["statistics"]:
+            size = sum(len(e.encode()) + 1 for e in db)
+            print(f"Paths: {len(db)}\nSize: {size} bytes")
+            return
+
+        results = []
+        for path in db:
+            if flags["existing"] and not os.path.exists(path):
+                continue
+            if is_match(path, flags["patterns"]):
+                results.append(path)
+
+        if flags["count"]:
+            print(len(results))
+        else:
+            output = results[:flags["limit"]] if flags["limit"] else results
+            sep = '\0' if flags["null"] else '\n'
+            print(sep.join(output))
+
+    except Exception as e:
+        if not flags["quiet"]:
+            print(f"❌ locate: {e}")
