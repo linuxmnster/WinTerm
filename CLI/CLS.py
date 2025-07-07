@@ -1,4 +1,4 @@
-import os, sys, shutil, shlex, glob
+import os, sys, shutil, shlex, glob, subprocess
 import stat
 import time
 import ctypes
@@ -20,17 +20,21 @@ def home_path():
     return path
 
 #sudo
-def run_as_admin():
-    # Check if the script is already running as admin
-    if ctypes.windll.shell32.IsUserAnAdmin() != 0:
-        print("Running with admin privileges.")
-        return True
-    else:
-        print("Attempting to run as admin...")
-        # Relaunch the script with admin privileges
-        script = sys.argv[0]
-        ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, script, None, 1)
-        return False
+def sudo_command():
+    python = shutil.which("python")
+    script = os.path.abspath(sys.argv[0])
+    args = ' '.join([f'"{arg}"' for arg in sys.argv[1:]])
+    full_command = f'"{python}" "{script}" {args}'
+
+    try:
+        # Launch a new elevated Python terminal directly
+        ctypes.windll.shell32.ShellExecuteW(
+            None, "runas", python, f'"{script}" {args}', None, 1
+        )
+        print("✅ New Admin Python terminal launched (UAC may prompt).")
+    except Exception as e:
+        print(f"❌ Failed to elevate: {e}")
+
 
 def clear_screen():
     os.system("cls" if os.name == "nt" else "clear")

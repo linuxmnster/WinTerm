@@ -72,7 +72,7 @@ def check_command(raw_input: str):
         CLS.pwd()
 
     elif base == "sudo":
-        CLS.run_as_admin()
+        CLS.sudo_command()
 
     elif base == "ls":
         CLS.ls_command(command)
