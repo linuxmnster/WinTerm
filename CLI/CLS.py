@@ -824,3 +824,111 @@ def locate_command(raw_input):
     except Exception as e:
         if not flags["quiet"]:
             print(f"❌ locate: {e}")
+
+#find
+def find_command(raw_input):
+    import os, shlex, stat, pwd, grp
+    from pathlib import Path
+    from datetime import datetime
+
+    args = shlex.split(raw_input)[1:]  # remove 'find'
+
+    # Defaults
+    start = "."
+    options = {
+        "name": None, "iname": None, "type": None,
+        "empty": False, "user": None, "group": None,
+        "perm": None, "size": None,
+        "ctime": None, "mtime": None, "atime": None,
+        "mindepth": 0, "maxdepth": float("inf"),
+        "not": False, "prune": False, "print": False,
+        "exec": None, "follow": "P"
+    }
+
+    # Parse args
+    i = 0
+    while i < len(args):
+        arg = args[i]
+        if not arg.startswith("-") and i == 0: start = arg
+        elif arg == "-name": i += 1; options["name"] = args[i]
+        elif arg == "-iname": i += 1; options["iname"] = args[i].lower()
+        elif arg == "-type": i += 1; options["type"] = args[i]
+        elif arg == "-empty": options["empty"] = True
+        elif arg == "-user": i += 1; options["user"] = args[i]
+        elif arg == "-group": i += 1; options["group"] = args[i]
+        elif arg == "-perm": i += 1; options["perm"] = int(args[i], 8)
+        elif arg == "-size": i += 1; options["size"] = args[i]
+        elif arg == "-ctime": i += 1; options["ctime"] = int(args[i])
+        elif arg == "-mtime": i += 1; options["mtime"] = int(args[i])
+        elif arg == "-atime": i += 1; options["atime"] = int(args[i])
+        elif arg == "-mindepth": i += 1; options["mindepth"] = int(args[i])
+        elif arg == "-maxdepth": i += 1; options["maxdepth"] = int(args[i])
+        elif arg == "-not": options["not"] = True
+        elif arg == "-prune": options["prune"] = True
+        elif arg == "-print": options["print"] = True
+        elif arg == "-exec": i += 1; options["exec"] = args[i:]
+        elif arg == "-L": options["follow"] = "L"
+        elif arg == "-P": options["follow"] = "P"
+        i += 1
+
+    results = []
+
+    def match(p: Path, st, depth):
+        try:
+            if depth < options["mindepth"]: return False
+            if options["name"] and p.name != options["name"]: return False
+            if options["iname"] and p.name.lower() != options["iname"]: return False
+            if options["type"]:
+                if options["type"] == "f" and not p.is_file(): return False
+                if options["type"] == "d" and not p.is_dir(): return False
+                if options["type"] == "l" and not p.is_symlink(): return False
+            if options["empty"]:
+                if p.is_file() and st.st_size != 0: return False
+                if p.is_dir() and any(p.iterdir()): return False
+            if options["user"]:
+                uid = st.st_uid
+                uname = pwd.getpwuid(uid).pw_name if not options["user"].isdigit() else uid
+                if uname != options["user"] and uid != int(options["user"]): return False
+            if options["group"]:
+                gid = st.st_gid
+                gname = grp.getgrgid(gid).gr_name if not options["group"].isdigit() else gid
+                if gname != options["group"] and gid != int(options["group"]): return False
+            if options["perm"] is not None:
+                if stat.S_IMODE(st.st_mode) != options["perm"]: return False
+            if options["size"]:
+                suffix = options["size"][-1]
+                val = int(options["size"][:-1])
+                fsz = st.st_size
+                if suffix == "c" and fsz != val: return False
+                if suffix == "k" and fsz // 1024 != val: return False
+            for key in ("ctime", "mtime", "atime"):
+                if options[key] is not None:
+                    delta = datetime.now() - datetime.fromtimestamp(getattr(st, f"st_{key}"))
+                    if delta.days != options[key]: return False
+            return True
+        except Exception:
+            return False
+
+    def walk(current: Path, depth=0):
+        if depth > options["maxdepth"]: return
+        try:
+            for entry in os.scandir(current):
+                p = Path(entry.path)
+                st = entry.stat(follow_symlinks=(options["follow"] == "L"))
+                matched = match(p, st, depth)
+                if options["not"]: matched = not matched
+                if matched:
+                    results.append(str(p))
+                    if options["exec"]:
+                        cmd = " ".join(options["exec"]).replace("{}", str(p))
+                        os.system(cmd)
+                    if options["prune"]: continue
+                if entry.is_dir(follow_symlinks=(options["follow"] == "L")):
+                    walk(p, depth + 1)
+        except Exception: pass
+
+    walk(Path(start))
+
+    if options["print"] or not options["exec"]:
+        for r in results:
+            print(r)
