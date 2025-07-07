@@ -117,5 +117,8 @@ def check_command(raw_input: str):
     elif base.startswith("find"):
         CLS.find_command(raw_input)
 
+    elif base.startswith("head"):
+        CLS.head_command(raw_input)
+
     else:
         print(f"⚠️  Unknown command: {command}")

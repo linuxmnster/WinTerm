@@ -936,3 +936,61 @@ def find_command(raw_input):
     if options["print"] or not options["exec"]:
         for r in results:
             print(r)
+
+#head
+def head_command(raw_input):
+    args = shlex.split(raw_input)[1:]  # remove 'head'
+    files = []
+    num_lines = 10
+    num_bytes = None
+    show_header = None  # None = auto, True = -v, False = -q
+
+    i = 0
+    while i < len(args):
+        arg = args[i]
+        if arg in ("-n", "--lines"):
+            i += 1
+            num_lines = int(args[i])
+        elif arg in ("-c", "--bytes"):
+            i += 1
+            num_bytes = int(args[i])
+        elif arg in ("-v", "--verbose"):
+            show_header = True
+        elif arg in ("-q", "--quiet"):
+            show_header = False
+        elif arg.startswith("-") and arg[1:].isdigit():
+            num_lines = int(arg[1:])  # support like `head -5`
+        else:
+            files.append(arg)
+        i += 1
+
+    if not files:
+        print("⚠️  head: missing file operand")
+        return
+
+    for idx, file in enumerate(files):
+        if not os.path.isfile(file):
+            print(f"❌ head: cannot open '{file}' for reading")
+            continue
+
+        try:
+            with open(file, "rb") as f:
+                content = f.read()
+
+            # Output header if needed
+            if show_header is True or (show_header is None and len(files) > 1):
+                print(f"==> {file} <==")
+
+            # Output lines or bytes
+            if num_bytes is not None:
+                print(content[:num_bytes].decode("utf-8", errors="replace"), end="")
+            else:
+                lines = content.decode("utf-8", errors="replace").splitlines()
+                print("\n".join(lines[:num_lines]))
+            
+            if idx < len(files) - 1 and show_header is not False:
+                print()
+
+        except Exception as e:
+            print(f"❌ head: {file}: {e}")
+
