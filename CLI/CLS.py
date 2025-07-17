@@ -1231,6 +1231,144 @@ def locate_command(raw_input):
         sep = '\0' if flags["null"] else '\n'
         print(sep.join(matched), end=sep if matched else "")
 
+#find
+def find_command(raw_input):
+    args = shlex.split(raw_input)
+    if args[0] == 'find':
+        args = args[1:]
+    if not args:
+        print("⚠️  find: missing arguments")
+        return
+
+    # Parse path
+    path = '.'
+    if args and not args[0].startswith('-'):
+        path = args.pop(0)
+
+    follow_symlinks = False
+    maxdepth = None
+    mindepth = 0
+    conditions = []
+
+    i = 0
+    while i < len(args):
+        arg = args[i]
+
+        if arg == '-name':
+            i += 1
+            pattern = args[i]
+            conditions.append(lambda p, pat=pattern: os.path.basename(p) == pat)
+        elif arg == '-iname':
+            i += 1
+            pattern = args[i]
+            conditions.append(lambda p, pat=pattern: os.path.basename(p).lower() == pat.lower())
+        elif arg == '-type':
+            i += 1
+            t = args[i]
+            def type_filter(path, t=t):
+                try:
+                    mode = os.lstat(path).st_mode
+                    return (t == 'f' and stat.S_ISREG(mode)) or \
+                           (t == 'd' and stat.S_ISDIR(mode)) or \
+                           (t == 'l' and stat.S_ISLNK(mode))
+                except: return False
+            conditions.append(type_filter)
+        elif arg == '-empty':
+            def empty(path):
+                return os.path.isdir(path) and not os.listdir(path) or \
+                       os.path.isfile(path) and os.path.getsize(path) == 0
+            conditions.append(empty)
+        elif arg == '-size':
+            i += 1
+            val = args[i]
+            op = val[0]
+            size = int(val[1:]) * 512 if val[-1] != 'c' else int(val[1:-1])
+            def size_filter(path, op=op, size=size):
+                try:
+                    s = os.path.getsize(path)
+                    return (op == '+' and s > size) or (op == '-' and s < size) or (op not in '+-' and s == size)
+                except: return False
+            conditions.append(size_filter)
+        elif arg in ('-mtime', '-ctime', '-atime'):
+            i += 1
+            val = args[i]
+            op = val[0]
+            days = int(val[1:])
+            threshold = time.time() - days * 86400
+            def time_filter(path, op=op, attr=arg):
+                try:
+                    t = {
+                        '-mtime': os.path.getmtime,
+                        '-ctime': os.path.getctime,
+                        '-atime': os.path.getatime
+                    }[attr](path)
+                    return (op == '+' and t < threshold) or (op == '-' and t > threshold) or (op not in '+-' and int(t//86400) == int(threshold//86400))
+                except: return False
+            conditions.append(time_filter)
+        elif arg == '-user':
+            i += 1
+            uname = args[i]
+            uid = pwd.getpwnam(uname).pw_uid
+            conditions.append(lambda path, uid=uid: os.lstat(path).st_uid == uid)
+        elif arg == '-group':
+            i += 1
+            gname = args[i]
+            gid = grp.getgrnam(gname).gr_gid
+            conditions.append(lambda path, gid=gid: os.lstat(path).st_gid == gid)
+        elif arg == '-perm':
+            i += 1
+            perm = int(args[i], 8)
+            conditions.append(lambda path, perm=perm: stat.S_IMODE(os.lstat(path).st_mode) == perm)
+        elif arg == '-mindepth':
+            i += 1
+            mindepth = int(args[i])
+        elif arg == '-maxdepth':
+            i += 1
+            maxdepth = int(args[i])
+        elif arg == '-not':
+            i += 1
+            sub_arg = args[i]
+            if sub_arg == '-name':
+                i += 1
+                pattern = args[i]
+                conditions.append(lambda p, pat=pattern: os.path.basename(p) != pat)
+        elif arg == '-L':
+            follow_symlinks = True
+        elif arg == '-P':
+            follow_symlinks = False
+        elif arg == '-print':
+            pass  # default behavior
+        elif arg == '-exec':
+            i += 1
+            cmd = []
+            while i < len(args) and args[i] != ';':
+                cmd.append(args[i])
+                i += 1
+            def exec_cmd(path, cmd=cmd):
+                try:
+                    subprocess.run([c if c != '{}' else path for c in cmd])
+                    return True
+                except:
+                    return False
+            conditions.append(exec_cmd)
+        i += 1
+
+    start_path = os.path.abspath(path)
+    for root, dirs, files in os.walk(start_path, topdown=True, followlinks=follow_symlinks):
+        cur_depth = root[len(start_path):].count(os.sep)
+        if maxdepth is not None and cur_depth > maxdepth:
+            dirs[:] = []
+            continue
+        if cur_depth < mindepth:
+            continue
+        for entry in dirs + files:
+            full_path = os.path.join(root, entry)
+            try:
+                if all(cond(full_path) for cond in conditions):
+                    print(full_path)
+            except:
+                continue
+
 
 #df
 
