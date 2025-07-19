@@ -1,4 +1,4 @@
-import os, sys, shutil, shlex, glob, threading, unicodedata
+import os, sys, shutil, shlex, glob, threading, unicodedata, subprocess, grp, argparse
 import stat
 import time
 import ctypes
@@ -1395,3 +1395,66 @@ def df_command():
             print(f"{part.device:<20} ERROR: {e}")
 
 #du
+def du_command(raw_input):
+    def human_readable(size):
+        for unit in ['B', 'K', 'M', 'G', 'T', 'P']:
+            if size < 1024.0:
+                return f"{size:.1f}{unit}"
+            size /= 1024.0
+        return f"{size:.1f}E"
+
+    def get_size(path, all_files=False, max_depth=None, current_depth=0):
+        total_size = 0
+        entries = []
+
+        try:
+            for entry in os.scandir(path):
+                try:
+                    full_path = os.path.join(path, entry.name)
+                    if entry.is_dir(follow_symlinks=False):
+                        if max_depth is None or current_depth < max_depth:
+                            size, sub_entries = get_size(full_path, all_files, max_depth, current_depth + 1)
+                            total_size += size
+                            entries.extend(sub_entries)
+                        else:
+                            size = 0
+                    else:
+                        size = entry.stat(follow_symlinks=False).st_size
+                        total_size += size
+                        if all_files:
+                            entries.append((size, full_path))
+                except Exception:
+                    continue
+        except Exception:
+            return 0, []
+
+        entries.append((total_size, path))
+        return total_size, entries
+
+    # Parse flags and arguments
+    parser = argparse.ArgumentParser()
+    parser.add_argument('targets', nargs='*', default=['.'])
+    parser.add_argument('-a', '--all', action='store_true')
+    parser.add_argument('-h', '--human-readable', action='store_true')
+    parser.add_argument('-s', '--summarize', action='store_true')
+    parser.add_argument('-d', '--max-depth', type=int)
+
+    try:
+        args = parser.parse_args(shlex.split(raw_input)[1:])
+    except SystemExit:
+        return
+
+    for target in args.targets:
+        if not os.path.exists(target):
+            print(f"du: cannot access '{target}': No such file or directory")
+            continue
+
+        total, entries = get_size(target, args.all, args.max_depth)
+
+        if args.summarize:
+            size_str = human_readable(total) if args.human_readable else total
+            print(f"{size_str}\t{target}")
+        else:
+            for size, path in sorted(entries, key=lambda x: x[1]):
+                size_str = human_readable(size) if args.human_readable else size
+                print(f"{size_str}\t{path}")

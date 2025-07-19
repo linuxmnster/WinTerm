@@ -121,7 +121,7 @@ def check_command(raw_input: str):
         CLS.df_command(raw_input)
 
     elif base.startswith("du"):
-        pass
-    
+        CLS.du_command(raw_input)
+
     else:
         print(f"⚠️  Unknown command: {command}")
