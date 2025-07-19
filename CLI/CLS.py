@@ -1369,7 +1369,29 @@ def find_command(raw_input):
             except:
                 continue
 
-
 #df
+def df_command():
+    def human_readable(size):
+        for unit in ['B','K','M','G','T','P','E']:
+            if size < 1024:
+                return f"{size:.1f}{unit}"
+            size /= 1024
+        return f"{size:.1f}Z"
+
+    print(f"{'Filesystem':<20} {'Size':>10} {'Used':>10} {'Avail':>10} {'Use%':>6} {'Mounted on'}")
+
+    for part in shutil.disk_partitions(all=False):
+        try:
+            usage = shutil.disk_usage(part.mountpoint)
+            total = usage.total
+            used = usage.used
+            free = usage.free
+            percent = int((used / total) * 100) if total else 0
+
+            fs = part.device if part.device else part.mountpoint
+            print(f"{fs:<20} {human_readable(total):>10} {human_readable(used):>10} "
+                  f"{human_readable(free):>10} {percent:>5}%  {part.mountpoint}")
+        except Exception as e:
+            print(f"{part.device:<20} ERROR: {e}")
 
 #du

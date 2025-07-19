@@ -117,16 +117,11 @@ def check_command(raw_input: str):
     elif base.startswith("find"):
         CLS.find_command(raw_input)
 
-    elif base.startswith("head"):
-        CLS.head_command(raw_input)
+    elif base.startswith("df"):
+        CLS.df_command(raw_input)
 
-    elif base.startswith("tail"):
-        CLS.tail_command(raw_input)
-
-    elif base.startswith("locate"):
-        CLS.locate_command(raw_input)
-
-    elif base.startswith("find"):
-        CLS.locate_command(raw_input)
+    elif base.startswith("du"):
+        pass
+    
     else:
         print(f"⚠️  Unknown command: {command}")
