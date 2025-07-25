@@ -1,15 +1,10 @@
-import os, sys, shutil, shlex, glob, threading, subprocess, argparse, fnmatch
+import os, sys, shutil, shlex, glob, threading, subprocess, fnmatch, psutil
 import stat
 import time
 import ctypes
 from pathlib import Path
 from datetime import datetime
 from . import CLS_check
-
-try:
-    import grp
-except:
-    os.system("pip install grp")
 
 def home_path():
     try:
@@ -1057,7 +1052,7 @@ def df_command(raw_input):
     from collections import namedtuple
 
     args = shlex.split(raw_input)
-    args = args[1:]  # Remove "df"
+    args = args[1:] 
 
     # Default options
     flags = {
@@ -1138,10 +1133,6 @@ def df_command(raw_input):
 
 #du
 def ps_command(raw_input):
-    import os
-    import subprocess
-    import shlex
-
     args = shlex.split(raw_input)[1:]  # remove 'ps'
 
     # Flags
@@ -1227,3 +1218,47 @@ def ps_command(raw_input):
         print(f"{'PID':<8} {'CMD'}")
         for p in output:
             print(f"{p['pid']:<8} {p['cmd']}")
+#top
+import os
+import time
+import shutil
+from datetime import datetime
+
+def top_command(interval=3, iterations=0):
+    try:
+        columns = shutil.get_terminal_size((80, 20)).columns
+        header = f"{'PID':>6} {'Image Name':<30} {'Mem Usage':>12} {'CPU Time':>12}"
+        divider = "-" * columns
+        count = 0
+
+        while iterations == 0 or count < iterations:
+            os.system('cls' if os.name == 'nt' else 'clear')
+            print(f"WinTerm Top - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+            print(divider)
+            print(header)
+            print(divider)
+
+            # Pull process list via Windows tasklist
+            tasklist = os.popen("tasklist /fo csv /nh").read().strip().split("\n")
+
+            for row in tasklist[:20]:  # Limit to top 20 entries
+                try:
+                    # Parse CSV safely
+                    parts = [p.strip('"') for p in row.split('","')]
+
+                    pid = parts[1]
+                    name = parts[0][:28]  # Limit length of process name
+                    mem = parts[-2]
+                    time_used = parts[-1]
+
+                    print(f"{pid:>6} {name:<30} {mem:>12} {time_used:>12}")
+                except Exception as e:
+                    continue
+
+            time.sleep(interval)
+            count += 1
+
+    except KeyboardInterrupt:
+        print("\n❌ Exited top.")
+    except Exception as e:
+        print(f"❌ Error: {e}")
