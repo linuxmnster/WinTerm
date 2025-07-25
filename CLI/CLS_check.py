@@ -111,9 +111,6 @@ def check_command(raw_input: str):
     elif base.startswith("tree"):
         CLS.tree_command(raw_input)
 
-    elif base.startswith("locate"):
-        CLS.locate_command(raw_input)
-
     elif base.startswith("find"):
         CLS.find_command(raw_input)
 

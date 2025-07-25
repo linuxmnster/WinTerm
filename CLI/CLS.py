@@ -1,4 +1,4 @@
-import os, sys, shutil, shlex, glob, threading, unicodedata, subprocess, argparse, fnmatch
+import os, sys, shutil, shlex, glob, threading, subprocess, argparse, fnmatch
 import stat
 import time
 import ctypes
@@ -1052,29 +1052,89 @@ def find_command(raw_input: str):
                     print(path)
 
 #df
-def df_command():
-    def human_readable(size):
-        for unit in ['B','K','M','G','T','P','E']:
+def df_command(raw_input):
+    import os, shutil, shlex
+    from collections import namedtuple
+
+    args = shlex.split(raw_input)
+    args = args[1:]  # Remove "df"
+
+    # Default options
+    flags = {
+        "human": False,
+        "total": False,
+        "print_type": False,
+        "all": False,
+        "only_type": None,
+        "exclude_type": None
+    }
+
+    i = 0
+    while i < len(args):
+        arg = args[i]
+        if arg in ["-h", "--human-readable"]:
+            flags["human"] = True
+        elif arg == "--total":
+            flags["total"] = True
+        elif arg in ["-T", "--print-type"]:
+            flags["print_type"] = True
+        elif arg in ["-a", "--all"]:
+            flags["all"] = True
+        elif arg.startswith("-x") or arg.startswith("--exclude-type="):
+            val = arg.split("=")[-1] if "=" in arg else args[i+1]
+            flags["exclude_type"] = val.upper()
+            if "=" not in arg:
+                i += 1
+        elif arg.startswith("-t") or arg.startswith("--type="):
+            val = arg.split("=")[-1] if "=" in arg else args[i+1]
+            flags["only_type"] = val.upper()
+            if "=" not in arg:
+                i += 1
+        i += 1
+
+    def humanize(size):
+        for unit in ['B', 'K', 'M', 'G', 'T']:
             if size < 1024:
                 return f"{size:.1f}{unit}"
             size /= 1024
-        return f"{size:.1f}Z"
+        return f"{size:.1f}P"
 
-    print(f"{'Filesystem':<20} {'Size':>10} {'Used':>10} {'Avail':>10} {'Use%':>6} {'Mounted on'}")
+    print(f"{'Filesystem':<20} {'Type':<8} {'Size':>10} {'Used':>10} {'Avail':>10} {'Use%':>6} {'Mounted on'}")
 
-    for part in shutil.disk_partitions(all=False):
+    total_size = total_used = total_free = 0
+    drives = [f"{chr(d)}:\\" for d in range(65, 91) if os.path.exists(f"{chr(d)}:\\")]
+
+    for drive in drives:
         try:
-            usage = shutil.disk_usage(part.mountpoint)
-            total = usage.total
-            used = usage.used
-            free = usage.free
-            percent = int((used / total) * 100) if total else 0
+            # Simulate filesystem type
+            fs_type = "NTFS"  # Could use `pywin32` or `psutil` to get real FS type
+            if flags["exclude_type"] and fs_type == flags["exclude_type"]:
+                continue
+            if flags["only_type"] and fs_type != flags["only_type"]:
+                continue
 
-            fs = part.device if part.device else part.mountpoint
-            print(f"{fs:<20} {human_readable(total):>10} {human_readable(used):>10} "
-                  f"{human_readable(free):>10} {percent:>5}%  {part.mountpoint}")
+            usage = shutil.disk_usage(drive)
+            size, used, free = usage.total, usage.used, usage.free
+            percent = f"{(used * 100) // size}%"
+            total_size += size
+            total_used += used
+            total_free += free
+
+            size_str = humanize(size) if flags["human"] else str(size)
+            used_str = humanize(used) if flags["human"] else str(used)
+            free_str = humanize(free) if flags["human"] else str(free)
+            fs_str = fs_type if flags["print_type"] else ""
+
+            print(f"{drive:<20} {fs_str:<8} {size_str:>10} {used_str:>10} {free_str:>10} {percent:>6} {drive}")
         except Exception as e:
-            print(f"{part.device:<20} ERROR: {e}")
+            print(f"⚠️  Error reading {drive}: {e}")
+
+    if flags["total"]:
+        size_str = humanize(total_size) if flags["human"] else str(total_size)
+        used_str = humanize(total_used) if flags["human"] else str(total_used)
+        free_str = humanize(total_free) if flags["human"] else str(total_free)
+        percent = f"{(total_used * 100) // total_size}%" if total_size else "0%"
+        print(f"{'total':<20} {'':<8} {size_str:>10} {used_str:>10} {free_str:>10} {percent:>6} -")
 
 #du
 def du_command(raw_input):
