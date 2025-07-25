@@ -1,4 +1,4 @@
-import os, sys, shutil, shlex, glob, threading, unicodedata, subprocess, argparse, fnmatch, pwd, grp
+import os, sys, shutil, shlex, glob, threading, unicodedata, subprocess, argparse, fnmatch
 import stat
 import time
 import ctypes
@@ -972,9 +972,20 @@ def locate_command(raw_input):
         print(sep.join(matched), end=sep if matched else "")
 
 #find
+import os
+import fnmatch
+import subprocess
+import time
+import stat
+
 def find_command(raw_input: str):
-    args = raw_input.strip().split()
-    start_path = "."
+    import shlex
+    args = shlex.split(raw_input)
+    if len(args) < 2 or args[0] != "find":
+        print("Usage: find <path> [options]")
+        return
+
+    start_path = args[1]
     filters = []
     exec_cmd = []
     follow_symlinks = False
@@ -983,28 +994,22 @@ def find_command(raw_input: str):
     negate = False
     default_action = True
 
-    i = 1
+    i = 2
     while i < len(args):
         token = args[i]
 
-        if token == ".":
-            start_path = args[i]
-
-        elif token == "-name" and i + 1 < len(args):
-            pattern = args[i + 1]
-            filters.append(("name", pattern, negate))
+        if token == "-name" and i + 1 < len(args):
+            filters.append(("name", args[i + 1], negate))
             i += 1
             negate = False
 
         elif token == "-iname" and i + 1 < len(args):
-            pattern = args[i + 1].lower()
-            filters.append(("iname", pattern, negate))
+            filters.append(("iname", args[i + 1], negate))
             i += 1
             negate = False
 
         elif token == "-type" and i + 1 < len(args):
-            t = args[i + 1]
-            filters.append(("type", t, negate))
+            filters.append(("type", args[i + 1], negate))
             i += 1
             negate = False
 
@@ -1015,13 +1020,10 @@ def find_command(raw_input: str):
         elif token == "-size" and i + 1 < len(args):
             size_str = args[i + 1]
             op = size_str[0] if size_str[0] in "+-=" else "="
-            num = int(size_str.lstrip("+-="))
-            filters.append(("size", (op, num), negate))
+            val = int(size_str.lstrip("+-="))
+            filters.append(("size", (op, val), negate))
             i += 1
             negate = False
-
-        elif token == "-not":
-            negate = True
 
         elif token == "-perm" and i + 1 < len(args):
             perm = int(args[i + 1], 8)
@@ -1030,41 +1032,36 @@ def find_command(raw_input: str):
             negate = False
 
         elif token == "-user" and i + 1 < len(args):
-            user = args[i + 1]
-            filters.append(("user", user, negate))
+            filters.append(("user", args[i + 1], negate))
             i += 1
             negate = False
 
         elif token == "-group" and i + 1 < len(args):
-            group = args[i + 1]
-            filters.append(("group", group, negate))
+            filters.append(("group", args[i + 1], negate))
             i += 1
             negate = False
 
         elif token == "-mtime" and i + 1 < len(args):
-            days = int(args[i + 1])
-            filters.append(("mtime", days, negate))
+            filters.append(("mtime", int(args[i + 1]), negate))
             i += 1
             negate = False
 
         elif token == "-atime" and i + 1 < len(args):
-            days = int(args[i + 1])
-            filters.append(("atime", days, negate))
+            filters.append(("atime", int(args[i + 1]), negate))
             i += 1
             negate = False
 
         elif token == "-ctime" and i + 1 < len(args):
-            days = int(args[i + 1])
-            filters.append(("ctime", days, negate))
+            filters.append(("ctime", int(args[i + 1]), negate))
             i += 1
             negate = False
 
-        elif token == "-maxdepth" and i + 1 < len(args):
-            max_depth = int(args[i + 1])
-            i += 1
-
         elif token == "-mindepth" and i + 1 < len(args):
             min_depth = int(args[i + 1])
+            i += 1
+
+        elif token == "-maxdepth" and i + 1 < len(args):
+            max_depth = int(args[i + 1])
             i += 1
 
         elif token == "-L":
@@ -1073,8 +1070,8 @@ def find_command(raw_input: str):
         elif token == "-P":
             follow_symlinks = False
 
-        elif token == "-print":
-            default_action = True
+        elif token == "-not":
+            negate = True
 
         elif token == "-exec":
             i += 1
@@ -1083,33 +1080,38 @@ def find_command(raw_input: str):
                 i += 1
             default_action = False
 
+        elif token == "-print":
+            default_action = True
+
         i += 1
 
-    def match_filters(path, entry, depth):
+    abs_start = os.path.abspath(start_path)
+
+    def match_filters(path, entry):
         try:
             st = os.stat(path, follow_symlinks=follow_symlinks)
         except Exception:
             return False
 
-        for ftype, value, is_not in filters:
+        for key, value, is_not in filters:
             result = False
-            if ftype == "name":
-                result = fnmatch.fnmatchcase(entry, value)
-            elif ftype == "iname":
-                result = fnmatch.fnmatch(entry.lower(), value)
-            elif ftype == "type":
+            if key == "name":
+                result = fnmatch.fnmatch(entry, value)
+            elif key == "iname":
+                result = fnmatch.fnmatch(entry.lower(), value.lower())
+            elif key == "type":
                 if value == "f":
                     result = os.path.isfile(path)
                 elif value == "d":
                     result = os.path.isdir(path)
                 elif value == "l":
                     result = os.path.islink(path)
-            elif ftype == "empty":
+            elif key == "empty":
                 if os.path.isfile(path):
                     result = os.path.getsize(path) == 0
                 elif os.path.isdir(path):
                     result = len(os.listdir(path)) == 0
-            elif ftype == "size":
+            elif key == "size":
                 size = os.path.getsize(path)
                 op, val = value
                 if op == "+":
@@ -1118,23 +1120,20 @@ def find_command(raw_input: str):
                     result = size < val
                 else:
                     result = size == val
-            elif ftype == "perm":
+            elif key == "perm":
                 result = stat.S_IMODE(st.st_mode) == value
-            elif ftype == "user":
+            elif key == "user":
                 try:
-                    result = pwd.getpwuid(st.st_uid).pw_name == value
+                    result = os.getlogin() == value
                 except:
-                    pass
-            elif ftype == "group":
-                try:
-                    result = grp.getgrgid(st.st_gid).gr_name == value
-                except:
-                    pass
-            elif ftype == "mtime":
+                    result = False
+            elif key == "group":
+                result = False  # Not supported on Windows
+            elif key == "mtime":
                 result = (time.time() - st.st_mtime) // 86400 == value
-            elif ftype == "atime":
+            elif key == "atime":
                 result = (time.time() - st.st_atime) // 86400 == value
-            elif ftype == "ctime":
+            elif key == "ctime":
                 result = (time.time() - st.st_ctime) // 86400 == value
 
             if is_not:
@@ -1144,15 +1143,15 @@ def find_command(raw_input: str):
         return True
 
     for root, dirs, files in os.walk(start_path, followlinks=follow_symlinks):
-        depth = root[len(start_path):].count(os.sep)
+        depth = os.path.abspath(root).count(os.sep) - abs_start.count(os.sep)
         if max_depth is not None and depth > max_depth:
             continue
         if depth < min_depth:
             continue
 
-        for entry in files + dirs:
+        for entry in dirs + files:
             path = os.path.join(root, entry)
-            if match_filters(path, entry, depth):
+            if match_filters(path, entry):
                 if exec_cmd:
                     cmd = [p if p != "{}" else path for p in exec_cmd]
                     try:
