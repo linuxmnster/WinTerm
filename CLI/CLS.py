@@ -1137,96 +1137,93 @@ def df_command(raw_input):
         print(f"{'total':<20} {'':<8} {size_str:>10} {used_str:>10} {free_str:>10} {percent:>6} -")
 
 #du
-def du_command(raw_input):
-    import os, shlex
-    from pathlib import Path
+def ps_command(raw_input):
+    import os
+    import subprocess
+    import shlex
 
-    args = shlex.split(raw_input)
-    args = args[1:]  # Remove 'du'
+    args = shlex.split(raw_input)[1:]  # remove 'ps'
 
-    flags = {
-        "all": False,
-        "human": False,
-        "summarize": False,
-        "total": False,
-        "max_depth": None,
-        "threshold": 0
-    }
+    # Flags
+    show_all = False
+    full_format = False
+    jobs_format = False
+    only_running = False
+    show_no_tty = False
+    user_filter = None
+    pid_filter = []
+    cmd_filter = None
+    sort_by = None
 
-    paths = []
     i = 0
     while i < len(args):
         arg = args[i]
-        if arg in ["-a", "--all"]:
-            flags["all"] = True
-        elif arg in ["-h", "--human-readable"]:
-            flags["human"] = True
-        elif arg in ["-s", "--summarize"]:
-            flags["summarize"] = True
-        elif arg in ["-c", "--total"]:
-            flags["total"] = True
-        elif arg.startswith("-d") or arg.startswith("--max-depth="):
-            if "=" in arg:
-                flags["max_depth"] = int(arg.split("=")[1])
-            else:
-                i += 1
-                flags["max_depth"] = int(args[i])
-        elif arg.startswith("-t") or arg.startswith("--threshold="):
-            if "=" in arg:
-                flags["threshold"] = int(arg.split("=")[1])
-            else:
-                i += 1
-                flags["threshold"] = int(args[i])
-        else:
-            paths.append(arg)
+        if arg in ("-A", "-e", "a"):
+            show_all = True
+        elif arg == "-f":
+            full_format = True
+        elif arg == "-j":
+            jobs_format = True
+        elif arg == "-r":
+            only_running = True
+        elif arg == "-x":
+            show_no_tty = True
+        elif arg == "-u":
+            i += 1
+            user_filter = args[i].lower()
+        elif arg == "-p":
+            i += 1
+            pid_filter = [int(p) for p in args[i].split(",")]
+        elif arg == "-C":
+            i += 1
+            cmd_filter = args[i].lower()
+        elif arg.startswith("--sort="):
+            sort_by = arg.split("=")[1]
         i += 1
 
-    if not paths:
-        paths = ["."]
+    # Use built-in tasklist
+    result = subprocess.run(["tasklist", "/V", "/FO", "CSV"], capture_output=True, text=True)
+    lines = result.stdout.strip().split("\n")[1:]  # skip header
 
-    def humanize(size):
-        for unit in ['B', 'K', 'M', 'G', 'T']:
-            if size < 1024:
-                return f"{size:.1f}{unit}"
-            size /= 1024
-        return f"{size:.1f}P"
-
-    def get_size(path, level=0, base_level=0):
-        total = 0
-        try:
-            if path.is_file():
-                size = path.stat().st_size
-                if flags["all"] and size >= flags["threshold"] * 1024:
-                    print(f"{humanize(size) if flags['human'] else size}\t{path}")
-                return size
-
-            for item in path.iterdir():
-                if item.is_symlink():
-                    continue
-                item_size = get_size(item, level + 1, base_level)
-                total += item_size
-
-            if not flags["summarize"] and (flags["max_depth"] is None or level - base_level <= flags["max_depth"]):
-                if total >= flags["threshold"] * 1024:
-                    print(f"{humanize(total) if flags['human'] else total}\t{path}")
-            return total
-        except Exception as e:
-            print(f"⚠️  du: {path}: {e}")
-            return 0
-
-    grand_total = 0
-    for path_str in paths:
-        path = Path(path_str)
-        if not path.exists():
-            print(f"⚠️  du: cannot access '{path}': No such file or directory")
+    output = []
+    for line in lines:
+        parts = [p.strip('"') for p in line.split('","')]
+        if len(parts) < 8:
             continue
-        base_level = len(path.resolve().parts)
-        size = get_size(path, base_level, base_level)
-        if flags["summarize"]:
-            if size >= flags["threshold"] * 1024:
-                print(f"{humanize(size) if flags['human'] else size}\t{path}")
-        grand_total += size
+        image_name, pid, session_name, session_num, mem_usage, status, user_name, window_title = parts[:8]
+        pid = int(pid)
 
-    if flags["total"]:
-        print(f"{humanize(grand_total) if flags['human'] else grand_total}\ttotal")
+        if pid_filter and pid not in pid_filter:
+            continue
+        if cmd_filter and cmd_filter not in image_name.lower():
+            continue
+        if user_filter and user_name.lower() != user_filter:
+            continue
+        if only_running and "running" not in status.lower():
+            continue
 
+        output.append({
+            "pid": pid,
+            "cmd": image_name,
+            "session": session_name,
+            "user": user_name,
+            "status": status,
+            "title": window_title
+        })
+
+    if sort_by and sort_by in output[0]:
+        output.sort(key=lambda x: str(x[sort_by]).lower())
+
+    # Print output
+    if full_format:
+        print(f"{'PID':<8} {'USER':<20} {'STATUS':<12} {'CMD':<25}")
+        for p in output:
+            print(f"{p['pid']:<8} {p['user']:<20} {p['status']:<12} {p['cmd']:<25}")
+    elif jobs_format:
+        print(f"{'PID':<8} {'SESSION':<10} {'CMD':<25}")
+        for p in output:
+            print(f"{p['pid']:<8} {p['session']:<10} {p['cmd']:<25}")
+    else:
+        print(f"{'PID':<8} {'CMD'}")
+        for p in output:
+            print(f"{p['pid']:<8} {p['cmd']}")
