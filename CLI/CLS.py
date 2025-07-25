@@ -1,4 +1,4 @@
-import os, sys, shutil, shlex, glob, threading, unicodedata, subprocess, argparse, fnmatch
+import os, sys, shutil, shlex, glob, threading, unicodedata, subprocess, argparse, fnmatch, pwd, grp
 import stat
 import time
 import ctypes
@@ -972,115 +972,195 @@ def locate_command(raw_input):
         print(sep.join(matched), end=sep if matched else "")
 
 #find
-import os
-import fnmatch
-import subprocess
-
 def find_command(raw_input: str):
     args = raw_input.strip().split()
     start_path = "."
-    name_pattern = None
-    iname_pattern = None
-    file_type = None
-    size_filter = None  # (operator, size)
-    exec_cmd = None
-    check_empty = False
+    filters = []
+    exec_cmd = []
+    follow_symlinks = False
+    max_depth = None
+    min_depth = 0
+    negate = False
+    default_action = True
 
-    # Parse arguments
     i = 1
     while i < len(args):
-        if args[i] == ".":
+        token = args[i]
+
+        if token == ".":
             start_path = args[i]
-        elif args[i] == "-name" and i + 1 < len(args):
-            name_pattern = args[i + 1].strip('"').strip("'")
+
+        elif token == "-name" and i + 1 < len(args):
+            pattern = args[i + 1]
+            filters.append(("name", pattern, negate))
             i += 1
-        elif args[i] == "-iname" and i + 1 < len(args):
-            iname_pattern = args[i + 1].strip('"').strip("'")
+            negate = False
+
+        elif token == "-iname" and i + 1 < len(args):
+            pattern = args[i + 1].lower()
+            filters.append(("iname", pattern, negate))
             i += 1
-        elif args[i] == "-type" and i + 1 < len(args):
-            file_type = args[i + 1]
-            if file_type not in ("f", "d"):
-                print("❌ Unsupported type. Use -type f or -type d")
-                return
+            negate = False
+
+        elif token == "-type" and i + 1 < len(args):
+            t = args[i + 1]
+            filters.append(("type", t, negate))
             i += 1
-        elif args[i] == "-empty":
-            check_empty = True
-        elif args[i] == "-size" and i + 1 < len(args):
-            op, val = args[i + 1][0], args[i + 1][1:]
-            if op not in "+-=":
-                op, val = "=", args[i + 1]
-            try:
-                size_filter = (op, int(val.strip("c")))
-            except:
-                print("❌ Invalid size value.")
-                return
+            negate = False
+
+        elif token == "-empty":
+            filters.append(("empty", None, negate))
+            negate = False
+
+        elif token == "-size" and i + 1 < len(args):
+            size_str = args[i + 1]
+            op = size_str[0] if size_str[0] in "+-=" else "="
+            num = int(size_str.lstrip("+-="))
+            filters.append(("size", (op, num), negate))
             i += 1
-        elif args[i] == "-exec":
-            exec_cmd = []
+            negate = False
+
+        elif token == "-not":
+            negate = True
+
+        elif token == "-perm" and i + 1 < len(args):
+            perm = int(args[i + 1], 8)
+            filters.append(("perm", perm, negate))
+            i += 1
+            negate = False
+
+        elif token == "-user" and i + 1 < len(args):
+            user = args[i + 1]
+            filters.append(("user", user, negate))
+            i += 1
+            negate = False
+
+        elif token == "-group" and i + 1 < len(args):
+            group = args[i + 1]
+            filters.append(("group", group, negate))
+            i += 1
+            negate = False
+
+        elif token == "-mtime" and i + 1 < len(args):
+            days = int(args[i + 1])
+            filters.append(("mtime", days, negate))
+            i += 1
+            negate = False
+
+        elif token == "-atime" and i + 1 < len(args):
+            days = int(args[i + 1])
+            filters.append(("atime", days, negate))
+            i += 1
+            negate = False
+
+        elif token == "-ctime" and i + 1 < len(args):
+            days = int(args[i + 1])
+            filters.append(("ctime", days, negate))
+            i += 1
+            negate = False
+
+        elif token == "-maxdepth" and i + 1 < len(args):
+            max_depth = int(args[i + 1])
+            i += 1
+
+        elif token == "-mindepth" and i + 1 < len(args):
+            min_depth = int(args[i + 1])
+            i += 1
+
+        elif token == "-L":
+            follow_symlinks = True
+
+        elif token == "-P":
+            follow_symlinks = False
+
+        elif token == "-print":
+            default_action = True
+
+        elif token == "-exec":
             i += 1
             while i < len(args) and args[i] != ";":
                 exec_cmd.append(args[i])
                 i += 1
-        else:
-            if not name_pattern and not iname_pattern:
-                name_pattern = args[i].strip('"').strip("'")
+            default_action = False
+
         i += 1
 
-    found = False
-    for root, dirs, files in os.walk(start_path):
-        entries = []
-        if file_type == "f":
-            entries = files
-        elif file_type == "d":
-            entries = dirs
-        else:
-            entries = files + dirs
+    def match_filters(path, entry, depth):
+        try:
+            st = os.stat(path, follow_symlinks=follow_symlinks)
+        except Exception:
+            return False
 
-        for entry in entries:
-            path = os.path.join(root, entry)
-            match = True
-
-            # Type check
-            if file_type == "f" and not os.path.isfile(path):
-                continue
-            if file_type == "d" and not os.path.isdir(path):
-                continue
-
-            # Name match
-            if name_pattern and not fnmatch.fnmatchcase(entry, name_pattern):
-                match = False
-            if iname_pattern and not fnmatch.fnmatch(entry.lower(), iname_pattern.lower()):
-                match = False
-
-            # Empty check
-            if check_empty:
-                if os.path.isfile(path) and os.path.getsize(path) != 0:
-                    match = False
-                elif os.path.isdir(path) and os.listdir(path):
-                    match = False
-
-            # Size filter
-            if size_filter and os.path.isfile(path):
+        for ftype, value, is_not in filters:
+            result = False
+            if ftype == "name":
+                result = fnmatch.fnmatchcase(entry, value)
+            elif ftype == "iname":
+                result = fnmatch.fnmatch(entry.lower(), value)
+            elif ftype == "type":
+                if value == "f":
+                    result = os.path.isfile(path)
+                elif value == "d":
+                    result = os.path.isdir(path)
+                elif value == "l":
+                    result = os.path.islink(path)
+            elif ftype == "empty":
+                if os.path.isfile(path):
+                    result = os.path.getsize(path) == 0
+                elif os.path.isdir(path):
+                    result = len(os.listdir(path)) == 0
+            elif ftype == "size":
                 size = os.path.getsize(path)
-                op, value = size_filter
-                if not ((op == "+" and size > value) or
-                        (op == "-" and size < value) or
-                        (op == "=" and size == value)):
-                    match = False
+                op, val = value
+                if op == "+":
+                    result = size > val
+                elif op == "-":
+                    result = size < val
+                else:
+                    result = size == val
+            elif ftype == "perm":
+                result = stat.S_IMODE(st.st_mode) == value
+            elif ftype == "user":
+                try:
+                    result = pwd.getpwuid(st.st_uid).pw_name == value
+                except:
+                    pass
+            elif ftype == "group":
+                try:
+                    result = grp.getgrgid(st.st_gid).gr_name == value
+                except:
+                    pass
+            elif ftype == "mtime":
+                result = (time.time() - st.st_mtime) // 86400 == value
+            elif ftype == "atime":
+                result = (time.time() - st.st_atime) // 86400 == value
+            elif ftype == "ctime":
+                result = (time.time() - st.st_ctime) // 86400 == value
 
-            if match:
+            if is_not:
+                result = not result
+            if not result:
+                return False
+        return True
+
+    for root, dirs, files in os.walk(start_path, followlinks=follow_symlinks):
+        depth = root[len(start_path):].count(os.sep)
+        if max_depth is not None and depth > max_depth:
+            continue
+        if depth < min_depth:
+            continue
+
+        for entry in files + dirs:
+            path = os.path.join(root, entry)
+            if match_filters(path, entry, depth):
                 if exec_cmd:
                     cmd = [p if p != "{}" else path for p in exec_cmd]
                     try:
                         subprocess.run(cmd)
                     except Exception as e:
-                        print(f"❌ Exec error: {e}")
-                else:
-                    print(os.path.normpath(path))
-                found = True
-
-    if not found:
-        print("")
+                        print(f"[exec error] {e}")
+                elif default_action:
+                    print(path)
 
 #df
 def df_command():
