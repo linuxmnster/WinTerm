@@ -1138,65 +1138,95 @@ def df_command(raw_input):
 
 #du
 def du_command(raw_input):
-    def human_readable(size):
-        for unit in ['B', 'K', 'M', 'G', 'T', 'P']:
-            if size < 1024.0:
-                return f"{size:.1f}{unit}"
-            size /= 1024.0
-        return f"{size:.1f}E"
+    import os, shlex
+    from pathlib import Path
 
-    def get_size(path, all_files=False, max_depth=None, current_depth=0):
-        total_size = 0
-        entries = []
+    args = shlex.split(raw_input)
+    args = args[1:]  # Remove 'du'
 
-        try:
-            for entry in os.scandir(path):
-                try:
-                    full_path = os.path.join(path, entry.name)
-                    if entry.is_dir(follow_symlinks=False):
-                        if max_depth is None or current_depth < max_depth:
-                            size, sub_entries = get_size(full_path, all_files, max_depth, current_depth + 1)
-                            total_size += size
-                            entries.extend(sub_entries)
-                        else:
-                            size = 0
-                    else:
-                        size = entry.stat(follow_symlinks=False).st_size
-                        total_size += size
-                        if all_files:
-                            entries.append((size, full_path))
-                except Exception:
-                    continue
-        except Exception:
-            return 0, []
+    flags = {
+        "all": False,
+        "human": False,
+        "summarize": False,
+        "total": False,
+        "max_depth": None,
+        "threshold": 0
+    }
 
-        entries.append((total_size, path))
-        return total_size, entries
-
-    # Parse flags and arguments
-    parser = argparse.ArgumentParser()
-    parser.add_argument('targets', nargs='*', default=['.'])
-    parser.add_argument('-a', '--all', action='store_true')
-    parser.add_argument('-h', '--human-readable', action='store_true')
-    parser.add_argument('-s', '--summarize', action='store_true')
-    parser.add_argument('-d', '--max-depth', type=int)
-
-    try:
-        args = parser.parse_args(shlex.split(raw_input)[1:])
-    except SystemExit:
-        return
-
-    for target in args.targets:
-        if not os.path.exists(target):
-            print(f"du: cannot access '{target}': No such file or directory")
-            continue
-
-        total, entries = get_size(target, args.all, args.max_depth)
-
-        if args.summarize:
-            size_str = human_readable(total) if args.human_readable else total
-            print(f"{size_str}\t{target}")
+    paths = []
+    i = 0
+    while i < len(args):
+        arg = args[i]
+        if arg in ["-a", "--all"]:
+            flags["all"] = True
+        elif arg in ["-h", "--human-readable"]:
+            flags["human"] = True
+        elif arg in ["-s", "--summarize"]:
+            flags["summarize"] = True
+        elif arg in ["-c", "--total"]:
+            flags["total"] = True
+        elif arg.startswith("-d") or arg.startswith("--max-depth="):
+            if "=" in arg:
+                flags["max_depth"] = int(arg.split("=")[1])
+            else:
+                i += 1
+                flags["max_depth"] = int(args[i])
+        elif arg.startswith("-t") or arg.startswith("--threshold="):
+            if "=" in arg:
+                flags["threshold"] = int(arg.split("=")[1])
+            else:
+                i += 1
+                flags["threshold"] = int(args[i])
         else:
-            for size, path in sorted(entries, key=lambda x: x[1]):
-                size_str = human_readable(size) if args.human_readable else size
-                print(f"{size_str}\t{path}")
+            paths.append(arg)
+        i += 1
+
+    if not paths:
+        paths = ["."]
+
+    def humanize(size):
+        for unit in ['B', 'K', 'M', 'G', 'T']:
+            if size < 1024:
+                return f"{size:.1f}{unit}"
+            size /= 1024
+        return f"{size:.1f}P"
+
+    def get_size(path, level=0, base_level=0):
+        total = 0
+        try:
+            if path.is_file():
+                size = path.stat().st_size
+                if flags["all"] and size >= flags["threshold"] * 1024:
+                    print(f"{humanize(size) if flags['human'] else size}\t{path}")
+                return size
+
+            for item in path.iterdir():
+                if item.is_symlink():
+                    continue
+                item_size = get_size(item, level + 1, base_level)
+                total += item_size
+
+            if not flags["summarize"] and (flags["max_depth"] is None or level - base_level <= flags["max_depth"]):
+                if total >= flags["threshold"] * 1024:
+                    print(f"{humanize(total) if flags['human'] else total}\t{path}")
+            return total
+        except Exception as e:
+            print(f"⚠️  du: {path}: {e}")
+            return 0
+
+    grand_total = 0
+    for path_str in paths:
+        path = Path(path_str)
+        if not path.exists():
+            print(f"⚠️  du: cannot access '{path}': No such file or directory")
+            continue
+        base_level = len(path.resolve().parts)
+        size = get_size(path, base_level, base_level)
+        if flags["summarize"]:
+            if size >= flags["threshold"] * 1024:
+                print(f"{humanize(size) if flags['human'] else size}\t{path}")
+        grand_total += size
+
+    if flags["total"]:
+        print(f"{humanize(grand_total) if flags['human'] else grand_total}\ttotal")
+
