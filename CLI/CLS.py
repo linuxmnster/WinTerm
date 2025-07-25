@@ -972,79 +972,115 @@ def locate_command(raw_input):
         print(sep.join(matched), end=sep if matched else "")
 
 #find
-def find_command(args):
-    def parse_size(size_str):
-        if size_str.endswith('c'):
-            size_str = size_str[:-1]
-        if size_str.startswith('+'):
-            return '>', int(size_str[1:])
-        elif size_str.startswith('-'):
-            return '<', int(size_str[1:])
-        else:
-            return '=', int(size_str)
+import os
+import fnmatch
+import subprocess
 
-    def match_size(file_path, op, target_size):
-        try:
-            actual_size = os.path.getsize(file_path)
-            return (op == '>' and actual_size > target_size) or \
-                   (op == '<' and actual_size < target_size) or \
-                   (op == '=' and actual_size == target_size)
-        except:
-            return False
-
-    path = '.'
-    name = None
-    iname = None
-    type_filter = None
-    size_filter = None
+def find_command(raw_input: str):
+    args = raw_input.strip().split()
+    start_path = "."
+    name_pattern = None
+    iname_pattern = None
+    file_type = None
+    size_filter = None  # (operator, size)
     exec_cmd = None
+    check_empty = False
 
-    i = 0
+    # Parse arguments
+    i = 1
     while i < len(args):
-        arg = args[i]
-        if arg == '-name':
+        if args[i] == ".":
+            start_path = args[i]
+        elif args[i] == "-name" and i + 1 < len(args):
+            name_pattern = args[i + 1].strip('"').strip("'")
             i += 1
-            name = args[i]
-        elif arg == '-iname':
+        elif args[i] == "-iname" and i + 1 < len(args):
+            iname_pattern = args[i + 1].strip('"').strip("'")
             i += 1
-            iname = args[i]
-        elif arg == '-type':
+        elif args[i] == "-type" and i + 1 < len(args):
+            file_type = args[i + 1]
+            if file_type not in ("f", "d"):
+                print("❌ Unsupported type. Use -type f or -type d")
+                return
             i += 1
-            type_filter = args[i]
-        elif arg == '-size':
+        elif args[i] == "-empty":
+            check_empty = True
+        elif args[i] == "-size" and i + 1 < len(args):
+            op, val = args[i + 1][0], args[i + 1][1:]
+            if op not in "+-=":
+                op, val = "=", args[i + 1]
+            try:
+                size_filter = (op, int(val.strip("c")))
+            except:
+                print("❌ Invalid size value.")
+                return
             i += 1
-            size_filter = parse_size(args[i])
-        elif arg == '-exec':
+        elif args[i] == "-exec":
             exec_cmd = []
             i += 1
-            while i < len(args) and args[i] != ';':
+            while i < len(args) and args[i] != ";":
                 exec_cmd.append(args[i])
                 i += 1
-        elif not arg.startswith('-'):
-            path = arg
+        else:
+            if not name_pattern and not iname_pattern:
+                name_pattern = args[i].strip('"').strip("'")
         i += 1
 
-    for root, dirs, files in os.walk(path):
-        all_entries = files + dirs
-        for entry in all_entries:
-            full_path = os.path.join(root, entry)
+    found = False
+    for root, dirs, files in os.walk(start_path):
+        entries = []
+        if file_type == "f":
+            entries = files
+        elif file_type == "d":
+            entries = dirs
+        else:
+            entries = files + dirs
 
-            if name and not fnmatch.fnmatch(entry, name):
+        for entry in entries:
+            path = os.path.join(root, entry)
+            match = True
+
+            # Type check
+            if file_type == "f" and not os.path.isfile(path):
                 continue
-            if iname and not fnmatch.fnmatch(entry.lower(), iname.lower()):
-                continue
-            if type_filter == 'f' and not os.path.isfile(full_path):
-                continue
-            if type_filter == 'd' and not os.path.isdir(full_path):
-                continue
-            if size_filter and not match_size(full_path, *size_filter):
+            if file_type == "d" and not os.path.isdir(path):
                 continue
 
-            if exec_cmd:
-                simulated = [arg if arg != '{}' else f'"{full_path}"' for arg in exec_cmd]
-                print('Executing:', ' '.join(simulated))
-            else:
-                print(full_path)
+            # Name match
+            if name_pattern and not fnmatch.fnmatchcase(entry, name_pattern):
+                match = False
+            if iname_pattern and not fnmatch.fnmatch(entry.lower(), iname_pattern.lower()):
+                match = False
+
+            # Empty check
+            if check_empty:
+                if os.path.isfile(path) and os.path.getsize(path) != 0:
+                    match = False
+                elif os.path.isdir(path) and os.listdir(path):
+                    match = False
+
+            # Size filter
+            if size_filter and os.path.isfile(path):
+                size = os.path.getsize(path)
+                op, value = size_filter
+                if not ((op == "+" and size > value) or
+                        (op == "-" and size < value) or
+                        (op == "=" and size == value)):
+                    match = False
+
+            if match:
+                if exec_cmd:
+                    cmd = [p if p != "{}" else path for p in exec_cmd]
+                    try:
+                        subprocess.run(cmd)
+                    except Exception as e:
+                        print(f"❌ Exec error: {e}")
+                else:
+                    print(os.path.normpath(path))
+                found = True
+
+    if not found:
+        print("")
 
 #df
 def df_command():
