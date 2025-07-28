@@ -126,5 +126,7 @@ def check_command(raw_input: str):
     elif base.startswith("top"):
         CLS.top_command(raw_input)
     
+    elif base.startswith("kill"):
+        CLS.kill_command(raw_input)
     else:
         print(f"⚠️  Unknown command: {command}")

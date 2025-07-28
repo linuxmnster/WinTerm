@@ -1367,3 +1367,22 @@ while ($true) {
     except Exception as e:
         print(f"❌ Failed to run ntop.ps1: {e}")
 
+#kill
+def kill_command(raw_input):
+    args = shlex.split(raw_input)[1:]  # Remove 'kill'
+
+    force = False
+    pid = None
+
+    if args[0] == '-f' and len(args) > 1:
+        force = True
+        pid = args[1]
+    elif args[0] == '-n' and len(args) > 2 and args[1] == '9':
+        force = True
+        pid = args[2]
+    else:
+        pid = args[0]
+
+    if pid.isdigit():
+        cmd = f"taskkill /PID {pid} {'/F' if force else ''}"
+        subprocess.run(cmd, shell=True)
