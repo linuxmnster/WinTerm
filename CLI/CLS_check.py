@@ -117,8 +117,8 @@ def check_command(raw_input: str):
     elif base.startswith("df"):
         CLS.df_command(raw_input)
 
-    # elif base.startswith("du"):
-    #     CLS.du_command(raw_input)
+    elif base.startswith("du"):
+        CLS.du_command(raw_input)
 
     elif base.startswith("ps"):
         CLS.ps_command(raw_input)

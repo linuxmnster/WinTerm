@@ -1159,6 +1159,90 @@ def df_command(raw_input):
         print(line)
 
 #du
+def du_command(raw_input):
+    import os, shlex
+
+    args = shlex.split(raw_input)
+    args = args[1:] if len(args) > 1 else []
+
+    # Default directory is current
+    paths = []
+    summarize = False
+    human = False
+    all_files = False
+
+    # Flag parsing
+    i = 0
+    while i < len(args):
+        arg = args[i]
+        if arg in ("-h", "--human-readable"):
+            human = True
+        elif arg in ("-s", "--summarize"):
+            summarize = True
+        elif arg in ("-a", "--all"):
+            all_files = True
+        elif arg.startswith("-"):
+            print(f"❌ Unsupported flag: {arg}")
+            return
+        else:
+            paths.append(arg)
+        i += 1
+
+    if not paths:
+        paths = ["."]
+    
+    def humanize(size):
+        for unit in ['B', 'K', 'M', 'G', 'T']:
+            if size < 1024:
+                return f"{size:.1f}{unit}"
+            size /= 1024
+        return f"{size:.1f}P"
+
+    def get_size(path):
+        total = 0
+        if os.path.isfile(path):
+            return os.path.getsize(path)
+        for root, dirs, files in os.walk(path):
+            for f in files:
+                try:
+                    fp = os.path.join(root, f)
+                    total += os.path.getsize(fp)
+                except Exception:
+                    continue
+        return total
+
+    for path in paths:
+        if not os.path.exists(path):
+            print(f"❌ Path not found: {path}")
+            continue
+
+        if summarize:
+            size = get_size(path)
+            size_str = humanize(size) if human else str(size)
+            print(f"{size_str}\t{path}")
+        else:
+            if os.path.isfile(path):
+                size = os.path.getsize(path)
+                size_str = humanize(size) if human else str(size)
+                print(f"{size_str}\t{path}")
+            else:
+                for root, dirs, files in os.walk(path):
+                    total = 0
+                    for f in files:
+                        try:
+                            fp = os.path.join(root, f)
+                            size = os.path.getsize(fp)
+                            total += size
+                            if all_files:
+                                size_str = humanize(size) if human else str(size)
+                                print(f"{size_str}\t{fp}")
+                        except Exception:
+                            continue
+                    size_str = humanize(total) if human else str(total)
+                    print(f"{size_str}\t{root}")
+
+
+#ps
 def ps_command(raw_input):
     args = shlex.split(raw_input)[1:]  # remove 'ps'
 
