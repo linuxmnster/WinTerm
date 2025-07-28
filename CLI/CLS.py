@@ -1049,42 +1049,52 @@ def find_command(raw_input: str):
 #df
 def df_command(raw_input):
     import os, shutil, shlex
-    from collections import namedtuple
+    from datetime import datetime
 
-    args = shlex.split(raw_input)
-    args = args[1:] 
+    args = shlex.split(raw_input)[1:]  # Remove the 'df' part
 
-    # Default options
+    # Flag defaults
     flags = {
         "human": False,
         "total": False,
         "print_type": False,
         "all": False,
         "only_type": None,
-        "exclude_type": None
+        "exclude_type": None,
     }
 
+    # Parse flags
     i = 0
     while i < len(args):
         arg = args[i]
-        if arg in ["-h", "--human-readable"]:
+        if arg in ("-h", "--human-readable"):
             flags["human"] = True
         elif arg == "--total":
             flags["total"] = True
-        elif arg in ["-T", "--print-type"]:
+        elif arg in ("-T", "--print-type"):
             flags["print_type"] = True
-        elif arg in ["-a", "--all"]:
+        elif arg in ("-a", "--all"):
             flags["all"] = True
         elif arg.startswith("-x") or arg.startswith("--exclude-type="):
-            val = arg.split("=")[-1] if "=" in arg else args[i+1]
+            if "=" in arg:
+                val = arg.split("=")[-1]
+            else:
+                if i + 1 >= len(args):
+                    print("❌ Error: Missing value for -x / --exclude-type flag")
+                    return
+                val = args[i + 1]
+                i += 1
             flags["exclude_type"] = val.upper()
-            if "=" not in arg:
-                i += 1
         elif arg.startswith("-t") or arg.startswith("--type="):
-            val = arg.split("=")[-1] if "=" in arg else args[i+1]
-            flags["only_type"] = val.upper()
-            if "=" not in arg:
+            if "=" in arg:
+                val = arg.split("=")[-1]
+            else:
+                if i + 1 >= len(args):
+                    print("❌ Error: Missing value for -t / --type flag")
+                    return
+                val = args[i + 1]
                 i += 1
+            flags["only_type"] = val.upper()
         i += 1
 
     def humanize(size):
@@ -1094,15 +1104,21 @@ def df_command(raw_input):
             size /= 1024
         return f"{size:.1f}P"
 
-    print(f"{'Filesystem':<20} {'Type':<8} {'Size':>10} {'Used':>10} {'Avail':>10} {'Use%':>6} {'Mounted on'}")
+    # Print header
+    header = f"{'Filesystem':<20}"
+    if flags["print_type"]:
+        header += f"{'Type':<8} "
+    header += f"{'Size':>10} {'Used':>10} {'Avail':>10} {'Use%':>6} {'Mounted on'}"
+    print(header)
 
+    # Scan drives
     total_size = total_used = total_free = 0
     drives = [f"{chr(d)}:\\" for d in range(65, 91) if os.path.exists(f"{chr(d)}:\\")]
 
     for drive in drives:
         try:
-            # Simulate filesystem type
-            fs_type = "NTFS"  # Could use `pywin32` or `psutil` to get real FS type
+            # Simulated filesystem type
+            fs_type = "NTFS"  # Default guess for Windows
             if flags["exclude_type"] and fs_type == flags["exclude_type"]:
                 continue
             if flags["only_type"] and fs_type != flags["only_type"]:
@@ -1110,7 +1126,8 @@ def df_command(raw_input):
 
             usage = shutil.disk_usage(drive)
             size, used, free = usage.total, usage.used, usage.free
-            percent = f"{(used * 100) // size}%"
+            percent = f"{(used * 100) // size}%" if size else "0%"
+
             total_size += size
             total_used += used
             total_free += free
@@ -1118,18 +1135,28 @@ def df_command(raw_input):
             size_str = humanize(size) if flags["human"] else str(size)
             used_str = humanize(used) if flags["human"] else str(used)
             free_str = humanize(free) if flags["human"] else str(free)
-            fs_str = fs_type if flags["print_type"] else ""
 
-            print(f"{drive:<20} {fs_str:<8} {size_str:>10} {used_str:>10} {free_str:>10} {percent:>6} {drive}")
+            line = f"{drive:<20}"
+            if flags["print_type"]:
+                line += f"{fs_type:<8} "
+            line += f"{size_str:>10} {used_str:>10} {free_str:>10} {percent:>6} {drive}"
+            print(line)
+
         except Exception as e:
             print(f"⚠️  Error reading {drive}: {e}")
 
+    # Print total summary
     if flags["total"]:
+        percent = f"{(total_used * 100) // total_size}%" if total_size else "0%"
         size_str = humanize(total_size) if flags["human"] else str(total_size)
         used_str = humanize(total_used) if flags["human"] else str(total_used)
         free_str = humanize(total_free) if flags["human"] else str(total_free)
-        percent = f"{(total_used * 100) // total_size}%" if total_size else "0%"
-        print(f"{'total':<20} {'':<8} {size_str:>10} {used_str:>10} {free_str:>10} {percent:>6} -")
+
+        line = f"{'total':<20}"
+        if flags["print_type"]:
+            line += f"{'':<8} "
+        line += f"{size_str:>10} {used_str:>10} {free_str:>10} {percent:>6} -"
+        print(line)
 
 #du
 def ps_command(raw_input):
@@ -1219,46 +1246,63 @@ def ps_command(raw_input):
         for p in output:
             print(f"{p['pid']:<8} {p['cmd']}")
 #top
-import os
-import time
-import shutil
-from datetime import datetime
+def top_command():
+    def get_process_list():
+        try:
+            output = subprocess.check_output(
+                'tasklist /FO CSV /NH', shell=True, encoding='utf-8'
+            ).strip().splitlines()
 
-def top_command(interval=3, iterations=0):
-    try:
-        columns = shutil.get_terminal_size((80, 20)).columns
-        header = f"{'PID':>6} {'Image Name':<30} {'Mem Usage':>12} {'CPU Time':>12}"
-        divider = "-" * columns
-        count = 0
+            processes = []
+            for line in output:
+                parts = [p.strip('"') for p in line.split('","')]
+                if len(parts) >= 5:
+                    pid = int(parts[1]) if parts[1].isdigit() else 0
+                    name = parts[0]
+                    mem = parts[4].replace(',', '').replace(' K', '').strip()
+                    try:
+                        mem = int(mem)
+                    except:
+                        mem = 0
+                    cpu_time = get_cpu_time(pid)
+                    processes.append({
+                        "pid": pid,
+                        "name": name,
+                        "memory": mem,
+                        "cpu_time": cpu_time
+                    })
+            return processes
+        except Exception as e:
+            print(f"❌ Error retrieving process list: {e}")
+            return []
 
-        while iterations == 0 or count < iterations:
-            os.system('cls' if os.name == 'nt' else 'clear')
-            print(f"WinTerm Top - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-            print(divider)
-            print(header)
-            print(divider)
+    def get_cpu_time(pid):
+        try:
+            cmd = f'wmic process where processid={pid} get KernelModeTime,UserModeTime /format:list'
+            output = subprocess.check_output(cmd, shell=True, encoding='utf-8').strip()
+            times = {}
+            for line in output.splitlines():
+                if "=" in line:
+                    k, v = line.strip().split("=", 1)
+                    times[k.strip()] = int(v.strip()) if v.strip().isdigit() else 0
+            total_100ns = times.get("KernelModeTime", 0) + times.get("UserModeTime", 0)
+            total_seconds = total_100ns // 10_000_000
+            return str(datetime.timedelta(seconds=total_seconds))
+        except:
+            return "0:00:00"
 
-            # Pull process list via Windows tasklist
-            tasklist = os.popen("tasklist /fo csv /nh").read().strip().split("\n")
+    def display_top(processes):
+        now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        print(f"\nWinTerm Top - {now}")
+        print("-" * 120)
+        print(f"{'PID':>6} {'Image Name':<30} {'Mem Usage':>12} {'CPU Time':>12}")
+        print("-" * 120)
+        for proc in processes[:20]:  # Top 20 processes
+            print(f"{proc['pid']:>6} {proc['name']:<30} {proc['memory']:>10,} K {proc['cpu_time']:>12}")
+        print("-" * 120)
 
-            for row in tasklist[:20]:  # Limit to top 20 entries
-                try:
-                    # Parse CSV safely
-                    parts = [p.strip('"') for p in row.split('","')]
+    # MAIN FLOW
+    processes = get_process_list()
+    processes.sort(key=lambda x: x['memory'], reverse=True)  # Sort by memory usage
+    display_top(processes)
 
-                    pid = parts[1]
-                    name = parts[0][:28]  # Limit length of process name
-                    mem = parts[-2]
-                    time_used = parts[-1]
-
-                    print(f"{pid:>6} {name:<30} {mem:>12} {time_used:>12}")
-                except Exception as e:
-                    continue
-
-            time.sleep(interval)
-            count += 1
-
-    except KeyboardInterrupt:
-        print("\n❌ Exited top.")
-    except Exception as e:
-        print(f"❌ Error: {e}")
