@@ -1,4 +1,4 @@
-import os, sys, shutil, shlex, glob, threading, subprocess, fnmatch, psutil
+import os, sys, shutil, shlex, glob, threading, subprocess, fnmatch, platform
 import stat
 import time
 import ctypes
@@ -1386,3 +1386,77 @@ def kill_command(raw_input):
     if pid.isdigit():
         cmd = f"taskkill /PID {pid} {'/F' if force else ''}"
         subprocess.run(cmd, shell=True)
+
+#uname
+
+def uname_command(raw_input):
+    args = shlex.split(raw_input)[1:]  # Remove 'uname'
+
+    flags = {
+        "-a": False,
+        "--all": False,
+        "-s": False,
+        "--kernel-name": False,
+        "-n": False,
+        "--nodename": False,
+        "-r": False,
+        "--kernel-release": False,
+        "-v": False,
+        "--kernel-version": False,
+        "-m": False,
+        "--machine": False,
+        "-p": False,
+        "--processor": False,
+        "-i": False,
+        "--hardware-platform": False,
+        "-o": False,
+        "--operating-system": False,
+    }
+
+    # Set selected flags
+    for arg in args:
+        if arg in flags:
+            flags[arg] = True
+
+    # If no specific flag is provided, default to -s (kernel name)
+    if not any(flags.values()):
+        flags["-s"] = True
+
+    # Function to get fields
+    def uname_info():
+        return {
+            "kernel_name": platform.system(),
+            "nodename": platform.node(),
+            "kernel_release": platform.release(),
+            "kernel_version": platform.version(),
+            "machine": platform.machine(),
+            "processor": platform.processor(),
+            "hardware_platform": os.environ.get("PROCESSOR_ARCHITECTURE", "unknown"),
+            "os": platform.system(),
+        }
+
+    info = uname_info()
+
+    # Handle `-a` or `--all`
+    if flags["-a"] or flags["--all"]:
+        output = f"{info['kernel_name']} {info['nodename']} {info['kernel_release']} {info['kernel_version']} {info['machine']} {info['processor']} {info['hardware_platform']} {info['os']}"
+        print(output)
+        return
+
+    # Individual flags output
+    if flags["-s"] or flags["--kernel-name"]:
+        print(info["kernel_name"])
+    if flags["-n"] or flags["--nodename"]:
+        print(info["nodename"])
+    if flags["-r"] or flags["--kernel-release"]:
+        print(info["kernel_release"])
+    if flags["-v"] or flags["--kernel-version"]:
+        print(info["kernel_version"])
+    if flags["-m"] or flags["--machine"]:
+        print(info["machine"])
+    if flags["-p"] or flags["--processor"]:
+        print(info["processor"])
+    if flags["-i"] or flags["--hardware-platform"]:
+        print(info["hardware_platform"])
+    if flags["-o"] or flags["--operating-system"]:
+        print(info["os"])
