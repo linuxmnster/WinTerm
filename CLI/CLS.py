@@ -1330,63 +1330,40 @@ def ps_command(raw_input):
         for p in output:
             print(f"{p['pid']:<8} {p['cmd']}")
 #top
-def top_command():
-    def get_process_list():
-        try:
-            output = subprocess.check_output(
-                'tasklist /FO CSV /NH', shell=True, encoding='utf-8'
-            ).strip().splitlines()
+import os
+import subprocess
+from pathlib import Path
 
-            processes = []
-            for line in output:
-                parts = [p.strip('"') for p in line.split('","')]
-                if len(parts) >= 5:
-                    pid = int(parts[1]) if parts[1].isdigit() else 0
-                    name = parts[0]
-                    mem = parts[4].replace(',', '').replace(' K', '').strip()
-                    try:
-                        mem = int(mem)
-                    except:
-                        mem = 0
-                    cpu_time = get_cpu_time(pid)
-                    processes.append({
-                        "pid": pid,
-                        "name": name,
-                        "memory": mem,
-                        "cpu_time": cpu_time
-                    })
-            return processes
-        except Exception as e:
-            print(f"❌ Error retrieving process list: {e}")
-            return []
+def top_command(_=None):
+    # Define script path
+    script_dir = Path("tools/scripts")
+    script_path = script_dir / "ntop.ps1"
 
-    def get_cpu_time(pid):
-        try:
-            cmd = f'wmic process where processid={pid} get KernelModeTime,UserModeTime /format:list'
-            output = subprocess.check_output(cmd, shell=True, encoding='utf-8').strip()
-            times = {}
-            for line in output.splitlines():
-                if "=" in line:
-                    k, v = line.strip().split("=", 1)
-                    times[k.strip()] = int(v.strip()) if v.strip().isdigit() else 0
-            total_100ns = times.get("KernelModeTime", 0) + times.get("UserModeTime", 0)
-            total_seconds = total_100ns // 10_000_000
-            return str(datetime.timedelta(seconds=total_seconds))
-        except:
-            return "0:00:00"
+    # Ensure directory exists
+    script_dir.mkdir(parents=True, exist_ok=True)
 
-    def display_top(processes):
-        now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        print(f"\nWinTerm Top - {now}")
-        print("-" * 120)
-        print(f"{'PID':>6} {'Image Name':<30} {'Mem Usage':>12} {'CPU Time':>12}")
-        print("-" * 120)
-        for proc in processes[:20]:  # Top 20 processes
-            print(f"{proc['pid']:>6} {proc['name']:<30} {proc['memory']:>10,} K {proc['cpu_time']:>12}")
-        print("-" * 120)
+    # Download (i.e., write) ntop.ps1 if not already present
+    if not script_path.exists():
+        print("ℹ️  ntop.ps1 not found. Downloading default script...")
+        ntop_code = '''
+while ($true) {
+    Clear-Host
+    Get-Process |
+        Sort-Object CPU -Descending |
+        Select-Object -First 10 -Property Id, ProcessName, CPU, WorkingSet |
+        Format-Table -AutoSize
+    Start-Sleep -Seconds 2
+}
+'''
+        with open(script_path, "w", encoding="utf-8") as f:
+            f.write(ntop_code.strip())
 
-    # MAIN FLOW
-    processes = get_process_list()
-    processes.sort(key=lambda x: x['memory'], reverse=True)  # Sort by memory usage
-    display_top(processes)
+    # Execute the script using PowerShell
+    try:
+        print("🔁 Launching ntop (Press Ctrl+C to exit)...")
+        subprocess.run(["powershell", "-ExecutionPolicy", "Bypass", "-File", str(script_path)])
+    except KeyboardInterrupt:
+        print("\n🛑 ntop exited by user.")
+    except Exception as e:
+        print(f"❌ Failed to run ntop.ps1: {e}")
 
