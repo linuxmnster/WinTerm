@@ -1474,8 +1474,6 @@ def uname_command(raw_input):
 
 #shutdown
 def shutdown_command(raw_input):
-    import subprocess, shlex
-
     args = shlex.split(raw_input)[1:]
     delay = 0
     force = False
@@ -1499,5 +1497,27 @@ def shutdown_command(raw_input):
         cmd = ["shutdown", "/s", "/t", str(delay)]
         if force:
             cmd.append("/f")
+
+    subprocess.run(cmd, shell=True)
+
+#reboot
+def reboot_command(raw_input):
+    args = shlex.split(raw_input)[1:]
+    delay = 0
+    force = False
+
+    i = 0
+    while i < len(args):
+        arg = args[i]
+        if arg in ("-f", "--force"):
+            force = True
+        elif arg == "-t":
+            i += 1
+            delay = int(args[i]) if i < len(args) else 0
+        i += 1
+
+    cmd = ["shutdown", "/r", "/t", str(delay)]
+    if force:
+        cmd.append("/f")
 
     subprocess.run(cmd, shell=True)

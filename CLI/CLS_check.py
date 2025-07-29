@@ -135,6 +135,8 @@ def check_command(raw_input: str):
     elif base.startswith("shutdown"):
         CLS.shutdown_command(raw_input)
 
-    
+    elif base.startswith("reboot"):
+        CLS.reboot_command(raw_input)
+
     else:
         print(f"⚠️  Unknown command: {command}")
