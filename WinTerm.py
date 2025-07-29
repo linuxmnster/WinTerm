@@ -2,6 +2,8 @@ from time import sleep
 from CLI.CLS import home_path
 from CLI import CLS_check
 
+from GPT import gpt_parse
+
 def main():
     home_path()
     CLS_check.check_command("clear")
@@ -15,6 +17,10 @@ def main():
 
             elif user_input == "exit":
                 break
+
+            elif user_input.strip().lower().startswith("tgpt"):
+                gpt_parse.tgpt_command(user_input)
+                continue
 
             else:
                 CLS_check.check_command(user_input)
