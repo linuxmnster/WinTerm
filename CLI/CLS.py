@@ -21,22 +21,33 @@ def home_path():
 
 #sudo
 def sudo_command():
-    python = shutil.which("python")
-    script = os.path.abspath(sys.argv[0])
-    args = ' '.join([f'"{arg}"' for arg in sys.argv[1:]])
+    import os, sys, ctypes
 
     try:
+        python_exe = sys.executable
+        script_path = os.path.abspath(__file__)
+
+        if not os.path.exists(script_path):
+            print("❌ Could not resolve script path.")
+            return
+
+        # /k ensures CMD stays open; we use double quotes correctly
+        params = f'/k "{python_exe}" "{script_path}"'
+
         ctypes.windll.shell32.ShellExecuteW(
-            None, "runas", python, f'"{script}" {args}', None, 1
+            None, "runas", "cmd.exe", params, None, 1
         )
-        print("✅ New Admin Python terminal launched (UAC may prompt).")
+
+        print("✅ Admin WinTerm launched in new terminal (UAC will prompt).")
     except Exception as e:
         print(f"❌ Failed to elevate: {e}")
 
 
+#clear
 def clear_screen():
     os.system("cls" if os.name == "nt" else "clear")
 
+#pwd
 def pwd():
     print(os.getcwd())
 
@@ -1460,3 +1471,33 @@ def uname_command(raw_input):
         print(info["hardware_platform"])
     if flags["-o"] or flags["--operating-system"]:
         print(info["os"])
+
+#shutdown
+def shutdown_command(raw_input):
+    import subprocess, shlex
+
+    args = shlex.split(raw_input)[1:]
+    delay = 0
+    force = False
+    abort = False
+
+    i = 0
+    while i < len(args):
+        arg = args[i]
+        if arg in ("-a", "--abort"):
+            abort = True
+        elif arg in ("-f", "--force"):
+            force = True
+        elif arg == "-t":
+            i += 1
+            delay = int(args[i]) if i < len(args) else 0
+        i += 1
+
+    if abort:
+        cmd = ["shutdown", "/a"]
+    else:
+        cmd = ["shutdown", "/s", "/t", str(delay)]
+        if force:
+            cmd.append("/f")
+
+    subprocess.run(cmd, shell=True)

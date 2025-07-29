@@ -131,5 +131,10 @@ def check_command(raw_input: str):
 
     elif base.startswith("uname"):
         CLS.uname_command(raw_input)
+
+    elif base.startswith("shutdown"):
+        CLS.shutdown_command(raw_input)
+
+    
     else:
         print(f"⚠️  Unknown command: {command}")
