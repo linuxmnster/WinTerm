@@ -22,6 +22,10 @@ def main():
                 gpt_parse.tgpt_command(user_input)
                 continue
 
+            elif user_input.strip().lower().startswith("gpt"):
+                from GPT.gpt_parse import handle_gpt_command
+                handle_gpt_command(user_input)
+
             else:
                 CLS_check.check_command(user_input)
 
