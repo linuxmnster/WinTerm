@@ -141,5 +141,8 @@ def check_command(raw_input: str):
     elif base.startswith("grep"):
         CLS.grep_command(raw_input)
 
+    elif base.startswith("diff"):
+        CLS.diff_command(raw_input)
+
     else:
         print(f"⚠️  Unknown command: {command}")

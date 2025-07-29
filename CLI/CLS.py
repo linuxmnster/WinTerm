@@ -1,4 +1,4 @@
-import os, sys, shutil, shlex, glob, threading, subprocess, fnmatch, platform
+import os, shutil, shlex, glob, threading, subprocess, fnmatch, platform, difflib
 import stat
 import time
 import ctypes
@@ -1698,3 +1698,158 @@ def grep_command(raw_input):
     # Execute
     for file in walk_files():
         process_file(file)
+
+#diff
+def diff_command(raw_input):
+    args = shlex.split(raw_input)[1:]
+
+    # Flags
+    ignore_case = False
+    unified = False
+    context = False
+    text_mode = False
+    ignore_space_change = False
+    binary_mode = False
+    minimal = False
+    ed_script = False
+    ignore_tabs = False
+    paginate = False
+    new_file = False
+    brief = False
+    report_same = False
+    ignore_all_space = False
+
+    files = []
+    i = 0
+    while i < len(args):
+        arg = args[i]
+        if arg == "-i":
+            ignore_case = True
+        elif arg == "-u":
+            unified = True
+        elif arg == "-c":
+            context = True
+        elif arg in ("-a", "--text"):
+            text_mode = True
+        elif arg in ("-b", "--ignore-space-change"):
+            ignore_space_change = True
+        elif arg == "--binary":
+            binary_mode = True
+        elif arg in ("-d", "--minimal"):
+            minimal = True
+        elif arg in ("-e", "--ed"):
+            ed_script = True
+        elif arg in ("-E", "--ignore-tab-expansion"):
+            ignore_tabs = True
+        elif arg in ("-l", "--paginate"):
+            paginate = True
+        elif arg in ("-N", "--new-file"):
+            new_file = True
+        elif arg in ("-q", "--brief"):
+            brief = True
+        elif arg in ("-s", "--report-identical-files"):
+            report_same = True
+        elif arg in ("-w", "--ignore-all-space"):
+            ignore_all_space = True
+        else:
+            files.append(arg)
+        i += 1
+
+    if len(files) != 2:
+        print("❌ Usage: diff [options] file1 file2")
+        return
+
+    file1, file2 = files
+    file1_exists = os.path.exists(file1)
+    file2_exists = os.path.exists(file2)
+
+    if not file1_exists and not file2_exists:
+        print("❌ Both files do not exist.")
+        return
+
+    # Handle --new-file
+    file1_lines = []
+    file2_lines = []
+    if file1_exists:
+        with open(file1, "r", errors='ignore') as f:
+            file1_lines = f.readlines()
+    elif new_file:
+        file1_lines = []
+
+    if file2_exists:
+        with open(file2, "r", errors='ignore') as f:
+            file2_lines = f.readlines()
+    elif new_file:
+        file2_lines = []
+
+    # Transformations
+    def preprocess(lines):
+        processed = []
+        for line in lines:
+            if ignore_tabs:
+                line = line.replace('\t', ' ')
+            if ignore_all_space:
+                line = ''.join(line.split())
+            elif ignore_space_change:
+                line = ' '.join(line.split())
+            if ignore_case:
+                line = line.lower()
+            processed.append(line)
+        return processed
+
+    lines1 = preprocess(file1_lines)
+    lines2 = preprocess(file2_lines)
+
+    # Brief mode
+    if brief:
+        if lines1 == lines2:
+            print("Files are identical")
+        else:
+            print("Files differ")
+        return
+
+    # Report identical
+    if report_same and lines1 == lines2:
+        print("Files are identical")
+        return
+
+    # Binary mode
+    if binary_mode:
+        with open(file1, 'rb') as f1, open(file2, 'rb') as f2:
+            data1 = f1.read()
+            data2 = f2.read()
+            if data1 == data2:
+                if report_same:
+                    print("Binary files are identical")
+            else:
+                print("Binary files differ")
+        return
+
+    # Diff output
+    if unified:
+        diff = difflib.unified_diff(file1_lines, file2_lines, fromfile=file1, tofile=file2)
+    elif context:
+        diff = difflib.context_diff(file1_lines, file2_lines, fromfile=file1, tofile=file2)
+    elif ed_script:
+        diff = difflib.ndiff(file1_lines, file2_lines)
+        # simulate ed format
+        for i, line in enumerate(diff):
+            if line.startswith("- "):
+                print(f"{i+1}d")
+            elif line.startswith("+ "):
+                print(f"{i}a")
+                print(f"> {line[2:].rstrip()}")
+        return
+    else:
+        diff = difflib.ndiff(file1_lines, file2_lines)
+
+    if paginate:
+        os.system('cls' if os.name == 'nt' else 'clear')
+
+    printed = False
+    for line in diff:
+        print(line, end='')
+        printed = True
+
+    if not printed and not report_same:
+        print("Files are identical.")
