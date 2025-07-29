@@ -1,4 +1,5 @@
 from . import CLS
+import subprocess
 
 #color function
 def colorize(text, text_color=None, bg_color=None, style=None):
@@ -145,4 +146,39 @@ def check_command(raw_input: str):
         CLS.diff_command(raw_input)
 
     else:
-        print(f"⚠️  Unknown command: {command}")
+        # Fallback for unknown commands
+        def execute_unknown_command(raw_input, base):
+            interactive_cmds = ['python', 'node', 'powershell', 'cmd']
+
+            cmd_name = base.lower().split()[0]
+
+            if cmd_name in interactive_cmds:
+                try:
+                    subprocess.call(raw_input, shell=True)
+                except Exception:
+                    print(f"{base}: command failed")
+            else:
+                try:
+                    result = subprocess.run(
+                        raw_input, shell=True,
+                        stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
+                    )
+
+                    # Suppress CMD's error and show only your own
+                    if result.returncode != 0 and (
+                        "not recognized as an internal or external command" in result.stderr
+                        or "cannot find the path specified" in result.stderr
+                        or "is not recognized" in result.stdout
+                    ):
+                        print(f"{base}: command not found")
+                    else:
+                        if result.stdout.strip():
+                            print(result.stdout, end="")
+                        if result.stderr.strip():
+                            print(result.stderr, end="")
+
+                except Exception:
+                    print(f"{base}: command not found")
+
+        execute_unknown_command(raw_input, base)
+

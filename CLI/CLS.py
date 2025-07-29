@@ -1,4 +1,4 @@
-import os, shutil, shlex, glob, threading, subprocess, fnmatch, platform, difflib
+import os, shutil, shlex, glob, threading, subprocess, fnmatch, platform, difflib, re
 import stat
 import time
 import ctypes
@@ -1523,10 +1523,6 @@ def reboot_command(raw_input):
     subprocess.run(cmd, shell=True)
 
 #grep
-import os
-import re
-import shlex
-
 def grep_command(raw_input):
     args = shlex.split(raw_input)[1:]
 
@@ -1853,3 +1849,4 @@ def diff_command(raw_input):
 
     if not printed and not report_same:
         print("Files are identical.")
+
