@@ -1521,3 +1521,180 @@ def reboot_command(raw_input):
         cmd.append("/f")
 
     subprocess.run(cmd, shell=True)
+
+#grep
+import os
+import re
+import shlex
+
+def grep_command(raw_input):
+    args = shlex.split(raw_input)[1:]
+
+    # Initialize options
+    flags = {
+        "ignore_case": False,
+        "invert": False,
+        "whole_word": False,
+        "whole_line": False,
+        "list_files": False,
+        "list_files_not": False,
+        "count": False,
+        "only_matching": False,
+        "line_number": False,
+        "no_filename": False,
+        "quiet": False,
+        "silent": False,
+        "binary_as_text": False,
+        "extended": False,
+        "after": 0,
+        "before": 0,
+        "context": 0,
+        "max_count": None,
+        "recursive": False,
+        "pattern": None,
+        "files": []
+    }
+
+    i = 0
+    while i < len(args):
+        arg = args[i]
+        if arg in ("-i",):
+            flags["ignore_case"] = True
+        elif arg in ("-v",):
+            flags["invert"] = True
+        elif arg in ("-w",):
+            flags["whole_word"] = True
+        elif arg in ("-x",):
+            flags["whole_line"] = True
+        elif arg in ("-l",):
+            flags["list_files"] = True
+        elif arg in ("-L",):
+            flags["list_files_not"] = True
+        elif arg in ("-c",):
+            flags["count"] = True
+        elif arg in ("-o",):
+            flags["only_matching"] = True
+        elif arg in ("-n",):
+            flags["line_number"] = True
+        elif arg in ("-h",):
+            flags["no_filename"] = True
+        elif arg in ("-q",):
+            flags["quiet"] = True
+        elif arg in ("-s",):
+            flags["silent"] = True
+        elif arg in ("-a",):
+            flags["binary_as_text"] = True
+        elif arg in ("-e", "-E"):
+            i += 1
+            flags["pattern"] = args[i]
+            flags["extended"] = True
+        elif arg in ("-m",):
+            i += 1
+            flags["max_count"] = int(args[i])
+        elif arg in ("-A",):
+            i += 1
+            flags["after"] = int(args[i])
+        elif arg in ("-B",):
+            i += 1
+            flags["before"] = int(args[i])
+        elif arg in ("-C",):
+            i += 1
+            flags["context"] = int(args[i])
+        elif arg in ("-r", "-R"):
+            flags["recursive"] = True
+        elif not flags["pattern"]:
+            flags["pattern"] = arg
+        else:
+            flags["files"].append(arg)
+        i += 1
+
+    if flags["context"]:
+        flags["after"] = flags["before"] = flags["context"]
+
+    if not flags["pattern"]:
+        print("❌ Error: No search pattern provided.")
+        return
+
+    if not flags["files"]:
+        print("❌ Error: No input files provided.")
+        return
+
+    pattern = flags["pattern"]
+    if flags["whole_word"]:
+        pattern = r"\b" + pattern + r"\b"
+    if flags["whole_line"]:
+        pattern = r"^" + pattern + r"$"
+
+    regex_flags = re.IGNORECASE if flags["ignore_case"] else 0
+    regex = re.compile(pattern, regex_flags)
+
+    def process_file(file_path):
+        try:
+            with open(file_path, 'r', errors='ignore') as f:
+                lines = f.readlines()
+        except FileNotFoundError:
+            if not flags["silent"]:
+                print(f"❌ File not found: {file_path}")
+            return
+        except Exception as e:
+            if not flags["silent"]:
+                print(f"❌ Error reading {file_path}: {e}")
+            return
+
+        match_lines = []
+        context = flags["before"] + flags["after"]
+        match_count = 0
+        matched = False
+
+        for idx, line in enumerate(lines):
+            line_strip = line.rstrip("\n")
+            match = regex.search(line_strip)
+            if flags["invert"]:
+                match = not match
+            if match:
+                matched = True
+                match_count += 1
+                if flags["list_files"]:
+                    print(file_path)
+                    return
+                if flags["list_files_not"]:
+                    return
+                if flags["count"]:
+                    continue
+                if flags["quiet"]:
+                    return
+                start = max(0, idx - flags["before"])
+                end = min(len(lines), idx + flags["after"] + 1)
+                for j in range(start, end):
+                    prefix = ""
+                    if not flags["no_filename"] and len(flags["files"]) > 1:
+                        prefix += f"{file_path}:"
+                    if flags["line_number"]:
+                        prefix += f"{j+1}:"
+                    if flags["only_matching"]:
+                        for m in regex.finditer(lines[j]):
+                            print(prefix + m.group())
+                    else:
+                        print(prefix + lines[j].rstrip("\n"))
+                if flags["max_count"] and match_count >= flags["max_count"]:
+                    break
+
+        if flags["count"]:
+            print(f"{file_path}:{match_count}" if not flags["no_filename"] else match_count)
+        elif flags["list_files_not"] and not matched:
+            print(file_path)
+
+    def walk_files():
+        matched_files = []
+        for path in flags["files"]:
+            if os.path.isdir(path) and flags["recursive"]:
+                for root, dirs, files in os.walk(path):
+                    for name in files:
+                        matched_files.append(os.path.join(root, name))
+            else:
+                matched_files.append(path)
+        return matched_files
+
+    # Execute
+    for file in walk_files():
+        process_file(file)
