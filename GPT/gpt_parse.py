@@ -21,11 +21,9 @@ def tgpt_command(raw_input: str):
     except Exception as e:
         print(f"❌ Failed to run tgpt.exe: {e}")
 
-import subprocess
 import webbrowser
 import shutil
 import sys
-import os
 
 def is_ollama_installed():
     return shutil.which("ollama") is not None
