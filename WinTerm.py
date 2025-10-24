@@ -3,6 +3,7 @@ from CLI.CLS import home_path
 from CLI import CLS_check
 
 from GPT import gpt_parse
+from Tools import apt
 
 def main():
     home_path()
@@ -25,6 +26,10 @@ def main():
             elif user_input.strip().lower().startswith("gpt"):
                 from GPT.gpt_parse import handle_gpt_command
                 handle_gpt_command(user_input)
+
+            elif user_input.strip().lower().startswith("apt"):
+                apt.check_apt_command(user_input)
+                continue
 
             else:
                 CLS_check.check_command(user_input)

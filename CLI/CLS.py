@@ -1,4 +1,4 @@
-import os, shutil, shlex, glob, threading, subprocess, fnmatch, platform, difflib, re
+import os, shutil, shlex, glob, threading, subprocess, fnmatch, platform, difflib, re, sys
 import stat
 import time
 from pathlib import Path
@@ -20,26 +20,28 @@ def home_path():
 
 #sudo
 def sudo_command():
-    import os, sys, ctypes
+    """Relaunch WinTerm as admin and exit current session."""
+    if os.name != 'nt':
+        print("sudo: Only supported on Windows in WinTerm")
+        return
 
+    python_exe = sys.executable
+    script_path = os.path.abspath(sys.argv[0])
+    args = " ".join([f'"{a}"' for a in sys.argv[1:]])
+    
+    print("🔼 Relaunching WinTerm as Administrator...")
+    
+    # PowerShell command to start elevated
+    ps_cmd = f'Start-Process "{python_exe}" -ArgumentList "{script_path} {args}" -Verb RunAs'
+    
     try:
-        python_exe = sys.executable
-        script_path = os.path.abspath(__file__)
-
-        if not os.path.exists(script_path):
-            print("❌ Could not resolve script path.")
-            return
-
-        # /k ensures CMD stays open; we use double quotes correctly
-        params = f'/k "{python_exe}" "{script_path}"'
-
-        ctypes.windll.shell32.ShellExecuteW(
-            None, "runas", "cmd.exe", params, None, 1
-        )
-
-        print("✅ Admin WinTerm launched in new terminal (UAC will prompt).")
+        subprocess.run(["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", ps_cmd])
+        print("✅ WinTerm launched as Administrator. Exiting current session...")
     except Exception as e:
         print(f"❌ Failed to elevate: {e}")
+    finally:
+        # Exit current non-admin session
+        sys.exit(0)
 
 
 #clear
