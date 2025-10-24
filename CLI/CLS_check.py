@@ -1,5 +1,5 @@
 from . import CLS
-import subprocess
+import os
 
 #color function
 def colorize(text, text_color=None, bg_color=None, style=None):
@@ -144,6 +144,22 @@ def check_command(raw_input: str):
 
     elif base.startswith("diff"):
         CLS.diff_command(raw_input)
+    
+    elif base == "nano":
+        nano_path = os.path.join(os.path.dirname(__file__), "nano.exe")
+        
+        if not os.path.exists(nano_path):
+            print("❌ nano.exe not found in CLI folder.")
+        else:
+            args = command[len(base):].strip()
+            if not args:
+                print("Usage: nano <filename>")
+            else:
+                import subprocess
+                try:
+                    subprocess.run([nano_path] + args.split())
+                except Exception as e:
+                    print(f"❌ Failed to run nano: {e}")
 
     else:
         # Fallback for unknown commands

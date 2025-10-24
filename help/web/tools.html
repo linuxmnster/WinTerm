@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WinTerm Tools Documentation</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header>
+    <div class="container">
+      <h1>WinTerm Documentation</h1>
+      <nav>
+        <a href="index.html">Home</a>
+        <a href="commands.html">Commands</a>
+        <a href="gpt.html">GPT</a>
+        <a href="tools.html">Tools</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="intro">
+      <h2>Terminal Tools in WinTerm</h2>
+      <p>
+        WinTerm comes with several built-in terminal tools to help with text editing, file searching, pattern matching, and automation. These tools enhance productivity and streamline your workflow.
+      </p>
+    </section>
+
+    <section class="tool" id="nano">
+      <h2>Nano Text Editor</h2>
+      <p>
+        <strong>Nano</strong> is a simple and user-friendly text editor that runs in the terminal. It is perfect for quickly editing text files, configuration files, or scripts without leaving the terminal.
+      </p>
+      <h3>Basic Usage:</h3>
+      <pre><code>nano filename.txt</code></pre>
+      <h3>Key Features:</h3>
+      <ul>
+        <li>Simple keyboard shortcuts displayed at the bottom of the terminal.</li>
+        <li>Supports copy, cut, paste, and search functionality.</li>
+        <li>Works in Unix, Linux, and Windows environments (via WinTerm).</li>
+        <li>Ideal for small edits or quick file modifications.</li>
+      </ul>
+      <h3>Common Shortcuts:</h3>
+      <ul>
+        <li><strong>Ctrl + O:</strong> Save file</li>
+        <li><strong>Ctrl + X:</strong> Exit nano</li>
+        <li><strong>Ctrl + K:</strong> Cut line</li>
+        <li><strong>Ctrl + U:</strong> Paste line</li>
+        <li><strong>Ctrl + W:</strong> Search text</li>
+      </ul>
+    </section>
+
+    <section class="tool" id="grep">
+      <h2>Grep</h2>
+      <p>
+        <strong>Grep</strong> is a powerful command-line tool used for searching plain-text data for lines matching a regular expression. It helps quickly find text patterns in files or outputs of other commands.
+      </p>
+      <h3>Basic Usage:</h3>
+      <pre><code>grep "pattern" filename.txt</code></pre>
+      <h3>Example:</h3>
+      <pre><code>grep "error" log.txt</code></pre>
+      <p>Searches for the word "error" in the file log.txt.</p>
+    </section>
+
+    <section class="tool" id="apt">
+      <h2>Apt (Advanced Package Tool)</h2>
+      <p>
+        <strong>Apt</strong> is a command-line package manager used in Debian-based systems (like Ubuntu) to install, remove, update, and manage software packages.
+      </p>
+      <h3>Common Commands:</h3>
+      <ul>
+        <li><code>apt update</code> - Update package lists from repositories.</li>
+        <li><code>apt install package-name</code> - Install a new package.</li>
+        <li><code>apt remove package-name</code> - Remove an installed package.</li>
+        <li><code>apt autoremove</code> - Remove unused dependencies.</li>
+      </ul>
+      <h3>Example:</h3>
+      <pre><code>apt install nano</code></pre>
+      <p>Installs the Nano text editor on your system.</p>
+    </section>
+
+    <section class="tool" id="other-tools">
+      <h2>Other Useful Tools</h2>
+      <ul>
+        <li><strong>tar:</strong> Archive files and directories</li>
+        <li><strong>zip/unzip:</strong> Compress and extract files</li>
+        <li><strong>less/more:</strong> View files page by page</li>
+        <li><strong>top/htop:</strong> Monitor system processes</li>
+        <li><strong>ping:</strong> Test connectivity to a host</li>
+        <li><strong>curl/wget:</strong> Download files from the internet</li>
+      </ul>
+    </section>
+
+    <section class="best-practices">
+      <h2>Best Practices</h2>
+      <ul>
+        <li>Use nano for quick edits, but consider vim for advanced editing.</li>
+        <li>Combine grep with other tools to filter and manipulate text efficiently.</li>
+        <li>Always back up important files before performing batch operations.</li>
+        <li>Use piping (<code>|</code>) to combine multiple tools for automation.</li>
+        <li>Keep your system updated using <code>apt update</code>.</li>
+      </ul>
+    </section>
+
+  </main>
+
+  <footer>
+    <div class="container">
+      <p>&copy; 2025 WinTerm Documentation</p>
+    </div>
+  </footer>
+</body>
+</html>

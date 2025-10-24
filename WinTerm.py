@@ -3,7 +3,7 @@ from CLI.CLS import home_path
 from CLI import CLS_check
 
 from GPT import gpt_parse
-from Tools import apt
+from tools import apt
 
 def main():
     home_path()
@@ -30,6 +30,10 @@ def main():
             elif user_input.strip().lower().startswith("apt"):
                 apt.check_apt_command(user_input)
                 continue
+
+            elif user_input.strip().lower().startswith("help"):
+                from help import help as help_module
+                help_module.trigger_help(user_input)
 
             else:
                 CLS_check.check_command(user_input)

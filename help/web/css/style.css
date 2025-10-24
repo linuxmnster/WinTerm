@@ -1,0 +1,108 @@
+/* General Styles */
+body {
+  font-family: 'Courier New', monospace;
+  background-color: #1e1e1e;
+  color: #d4d4d4;
+  margin: 0;
+  padding: 0;
+}
+
+a {
+  color: #4fc1ff;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+.container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+/* Header */
+header {
+  background-color: #111;
+  padding: 20px 0;
+  border-bottom: 2px solid #4fc1ff;
+}
+
+header h1 {
+  margin: 0;
+  font-size: 2rem;
+  text-align: center;
+}
+
+nav {
+  margin-top: 10px;
+  text-align: center;
+}
+
+nav a {
+  margin: 0 15px;
+  font-weight: bold;
+}
+
+/* Main Sections */
+main h2 {
+  border-bottom: 1px solid #4fc1ff;
+  padding-bottom: 5px;
+  margin-top: 40px;
+}
+
+.intro p, .getting-started p {
+  line-height: 1.6;
+  margin-top: 10px;
+}
+
+/* Feature Grid */
+.feature-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.feature-card {
+  background-color: #2a2a2a;
+  padding: 20px;
+  flex: 1 1 300px;
+  border-left: 4px solid #4fc1ff;
+  border-radius: 6px;
+  min-width: 280px;
+}
+
+.feature-card h3 {
+  margin-top: 0;
+}
+
+.feature-card a {
+  display: inline-block;
+  margin-top: 10px;
+}
+
+/* Footer */
+footer {
+  background-color: #111;
+  padding: 15px 0;
+  text-align: center;
+  border-top: 2px solid #4fc1ff;
+  margin-top: 40px;
+}
+
+/* Code block styling */
+code {
+  background-color: #333;
+  padding: 2px 5px;
+  border-radius: 3px;
+  color: #c3e88d;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .feature-grid {
+    flex-direction: column;
+  }
+}

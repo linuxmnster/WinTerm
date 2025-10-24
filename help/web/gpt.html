@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WinTerm GPT Documentation</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header>
+    <div class="container">
+      <h1>WinTerm Documentation</h1>
+      <nav>
+        <a href="index.html">Home</a>
+        <a href="commands.html">Commands</a>
+        <a href="gpt.html">GPT</a>
+        <a href="tools.html">Tools</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="intro">
+      <h2>GPT Integration in WinTerm</h2>
+      <p>
+        WinTerm comes with a built-in GPT-powered assistant to provide real-time guidance, command suggestions, troubleshooting, and automation support directly in your terminal.
+      </p>
+    </section>
+
+    <section class="features">
+      <h2>Features of GPT in WinTerm</h2>
+      <ul>
+        <li><strong>Context-aware assistance:</strong> GPT can understand your current directory, files, and recent commands to provide relevant suggestions.</li>
+        <li><strong>Command explanations:</strong> Detailed descriptions of any command, its flags, and examples.</li>
+        <li><strong>Interactive help:</strong> Ask questions in natural language about terminal operations.</li>
+        <li><strong>Automation scripts:</strong> Generate scripts or command sequences for repetitive tasks.</li>
+        <li><strong>Error handling guidance:</strong> GPT suggests ways to fix common errors and warnings in the terminal.</li>
+      </ul>
+    </section>
+
+    <section class="usage">
+      <h2>How to Use GPT</h2>
+      <p>To invoke GPT in WinTerm, simply type:</p>
+      <pre><code>gpt</code></pre>
+      <p>You can also use:</p>
+      <pre><code>gpt help</code></pre>
+      <p>This will display a list of available GPT commands and guidance topics.</p>
+
+      <h3>Example Interactions:</h3>
+      <pre><code>
+# Ask GPT to explain a command
+gpt "Explain ls -altrh"
+
+# Ask GPT for a sequence of commands
+gpt "How to create a nested directory structure and a file inside?"
+
+# Troubleshooting an error
+gpt "How to fix rmdir: directory not empty?"
+      </code></pre>
+    </section>
+
+    <section class="tgpt">
+      <h2>Using TGPT: A Terminal-Based ChatGPT Client</h2>
+      <p>
+        <strong>TGPT</strong> is a lightweight terminal-based client that allows you to interact with ChatGPT directly from your command line, without the need for API keys. It's an excellent tool for developers and power users who prefer to stay within the terminal environment.
+      </p>
+      <p>To install TGPT, run the following command:</p>
+      <pre><code>curl -sSL https://raw.githubusercontent.com/aandrew-me/tgpt/main/install | bash -s /usr/local/bin</code></pre>
+      <p>Once installed, you can use TGPT by typing:</p>
+      <pre><code>tgpt "Your question here"</code></pre>
+      <p>For example:</p>
+      <pre><code>tgpt "How to list all files including hidden ones?"</code></pre>
+      <p>For more information and advanced usage, visit the <a href="https://github.com/aandrew-me/tgpt" target="_blank" rel="noopener noreferrer">TGPT GitHub repository</a>.</p>
+    </section>
+
+    <section class="best-practices">
+      <h2>Best Practices</h2>
+      <ul>
+        <li>Use clear and concise natural language queries for better suggestions.</li>
+        <li>Combine GPT with commands in scripts to automate repetitive tasks.</li>
+        <li>Always verify GPT-suggested commands before running them, especially those affecting files or directories.</li>
+        <li>Leverage GPT for learning terminal commands and flags efficiently.</li>
+      </ul>
+    </section>
+
+    <section class="faq">
+      <h2>Frequently Asked Questions</h2>
+      <ul>
+        <li><strong>Q:</strong> Can GPT run commands directly?
+          <br><strong>A:</strong> GPT suggests commands but does not execute them automatically for safety.</li>
+        <li><strong>Q:</strong> Is GPT offline?
+          <br><strong>A:</strong> GPT in WinTerm requires an internet connection to process queries.</li>
+        <li><strong>Q:</strong> Can I use GPT for scripting?
+          <br><strong>A:</strong> Yes! GPT can generate scripts or command sequences for automation purposes.</li>
+      </ul>
+    </section>
+
+  </main>
+
+  <footer>
+    <div class="container">
+      <p>&copy; 2025 WinTerm Documentation</p>
+    </div>
+  </footer>
+</body>
+</html>
